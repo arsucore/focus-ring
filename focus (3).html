@@ -1,0 +1,4029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FOCUS</title>
+<meta name="description" content="Tap. React. Survive. A precision rhythm game.">
+<meta name="theme-color" content="#0d0e1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FOCUS">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<link rel="manifest" href="data:application/json,{
+  &quot;name&quot;: &quot;FOCUS&quot;,
+  &quot;short_name&quot;: &quot;FOCUS&quot;,
+  &quot;description&quot;: &quot;Tap. React. Survive.&quot;,
+  &quot;start_url&quot;: &quot;.&quot;,
+  &quot;display&quot;: &quot;standalone&quot;,
+  &quot;orientation&quot;: &quot;portrait&quot;,
+  &quot;background_color&quot;: &quot;#0d0e1a&quot;,
+  &quot;theme_color&quot;: &quot;#0d0e1a&quot;,
+  &quot;icons&quot;: [
+    { &quot;src&quot;: &quot;data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%230d0e1a'/><text x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-weight='bold' font-size='260' fill='%23c8c8ff'>F</text></svg>&quot;, &quot;sizes&quot;: &quot;any&quot;, &quot;type&quot;: &quot;image/svg+xml&quot;, &quot;purpose&quot;: &quot;any maskable&quot; }
+  ]
+}">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap');
+
+:root{
+  --bg:#0d0e1a;--ring-track:#1e2035;
+  --accent:#c8c8ff;--accent2:#7b7fff;
+  --text-primary:#e8e8ff;--text-mid:#5a5a7a;--text-dim:#2a2a3e;
+  --miss:#ff2244;--good:#8899ff;--perfect:#ffffff;--po:.18;
+}
+[data-theme="yellow"]{--bg:#0a0a0a;--ring-track:#1a1a1a;--accent:#e8ff47;--accent2:#b8cc00;--text-primary:#f0f0f0;--text-mid:#666;--text-dim:#2a2a2a;--po:.14;}
+[data-theme="neon"]{--bg:#04040e;--ring-track:#0d0d28;--accent:#00ffcc;--accent2:#00cc99;--text-primary:#d0fff8;--text-mid:#3a6a5a;--text-dim:#0d2020;--po:.16;}
+[data-theme="crimson"]{--bg:#0e0707;--ring-track:#1e0e0e;--accent:#ff3355;--accent2:#cc1133;--text-primary:#ffe0e4;--text-mid:#6a2030;--text-dim:#2a0a10;--po:.16;}
+[data-theme="white"]{--bg:#f0eeea;--ring-track:#d8d4cc;--accent:#111111;--accent2:#444444;--text-primary:#111111;--text-mid:#888880;--text-dim:#ccc8c0;--miss:#e03030;--good:#446688;--perfect:#000000;--po:.1;}
+[data-theme="gold"]{--bg:#0a0800;--ring-track:#1a1400;--accent:#ffd700;--accent2:#cc9900;--text-primary:#fff8d0;--text-mid:#7a6a00;--text-dim:#2a2400;--po:.15;}
+[data-theme="plasma"]{--bg:#050010;--ring-track:#110030;--accent:#cc44ff;--accent2:#8800cc;--text-primary:#f0d0ff;--text-mid:#5a2a7a;--text-dim:#1a0030;--po:.16;}
+[data-theme="ice"]{--bg:#010d14;--ring-track:#051a2a;--accent:#60d0ff;--accent2:#2090cc;--text-primary:#d0f0ff;--text-mid:#306070;--text-dim:#051018;--po:.15;}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--text-primary);
+  display:flex;align-items:center;justify-content:center;user-select:none;transition:background .4s,color .4s;}
+
+#bgCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
+
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .2s;z-index:1;}
+.screen.active{opacity:1;pointer-events:all;}
+
+/* HOME */
+.title{font-size:clamp(2.4rem,10vw,4rem);font-weight:700;letter-spacing:.45em;margin-bottom:10px;}
+.home-lives{display:flex;gap:6px;align-items:center;margin-bottom:40px;min-height:18px;}
+.hdot{width:7px;height:7px;border-radius:50%;background:var(--accent);}
+.hbtn{width:200px;height:50px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;
+  letter-spacing:.5em;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:10px;
+  transition:all .15s;border:none;}
+.hbtn.p{background:var(--accent);color:var(--bg);}
+.hbtn.p:active{filter:brightness(.85);}
+.hbtn.s{background:transparent;border:1px solid var(--text-dim);color:var(--text-mid);}
+.cfg-btn{position:absolute;top:20px;right:20px;background:none;border:none;color:var(--text-mid);cursor:pointer;padding:8px;display:flex;z-index:5;}
+
+/* SHARED SCROLLABLE SCREEN */
+.scroll-screen{align-items:flex-start;padding:44px 32px 60px;justify-content:flex-start;overflow-y:auto;}
+.sback{display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:36px;color:var(--text-mid);}
+.sback-lbl{font-size:11px;font-weight:700;letter-spacing:.35em;color:var(--text-primary);}
+.ssec{font-size:9px;letter-spacing:.3em;color:var(--text-dim);margin-bottom:12px;margin-top:4px;}
+.sopts{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;}
+.chip{padding:10px 16px;border-radius:4px;border:1px solid var(--text-dim);cursor:pointer;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.2em;
+  color:var(--text-mid);background:transparent;transition:all .15s;display:flex;align-items:center;gap:8px;}
+.chip.sel{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);}
+.chip.diff{flex-direction:column;padding:12px 18px;align-items:center;}
+.chip.locked{opacity:.3;cursor:not-allowed;pointer-events:none;}
+.chip.locked-click{opacity:.35;cursor:pointer;}
+.tdot{width:10px;height:10px;border-radius:50%;}
+.chip.toggle{justify-content:space-between;width:100%;max-width:300px;}
+.tog-track{width:28px;height:14px;border-radius:7px;background:var(--text-dim);position:relative;transition:background .2s;flex-shrink:0;}
+.chip.sel .tog-track{background:var(--accent);}
+.tog-knob{width:10px;height:10px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left .2s;}
+.chip.sel .tog-knob{left:16px;}
+.slider-row{display:flex;flex-direction:column;gap:6px;margin-bottom:24px;width:100%;max-width:300px;}
+.slider-label-row{display:flex;justify-content:space-between;}
+.slider-lbl{font-size:9px;letter-spacing:.25em;color:var(--text-mid);}
+.slider-val{font-size:9px;letter-spacing:.15em;color:var(--accent);font-weight:700;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;border-radius:2px;
+  background:linear-gradient(to right,var(--accent) 0%,var(--accent) var(--pct,30%),var(--text-dim) var(--pct,30%));
+  outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;
+  border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg);box-shadow:0 0 0 1px var(--accent);}
+
+/* GAME */
+#game{position:relative;cursor:pointer;width:100%;height:100%;}
+.g-top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;
+  padding:28px 28px 0;z-index:2;pointer-events:none;}
+.mode-lbl{font-size:10px;font-weight:600;letter-spacing:.25em;color:var(--text-mid);}
+.lives-num{font-size:clamp(1.8rem,7vw,2.8rem);font-weight:700;color:var(--text-mid);transition:color .3s;}
+.lives-num.danger{color:var(--miss);animation:numPulse .65s ease infinite;}
+@keyframes numPulse{0%,100%{opacity:1}50%{opacity:.4}}
+.score-area{position:absolute;top:80px;width:100%;text-align:center;z-index:2;pointer-events:none;}
+.score-num{font-size:clamp(2.8rem,10vw,4.5rem);font-weight:700;letter-spacing:.02em;display:inline-block;}
+.score-label{font-size:9px;letter-spacing:.4em;color:var(--text-mid);margin-top:2px;}
+.ring-area{position:relative;z-index:1;width:min(300px,78vw);height:min(300px,78vw);}
+.ring-svg{width:100%;height:100%;overflow:visible;}
+.combo-area{position:absolute;bottom:96px;width:100%;text-align:center;z-index:2;pointer-events:none;}
+.combo-val{font-size:clamp(1.8rem,7vw,3rem);font-weight:700;color:var(--text-mid);transition:color .2s;display:inline-block;}
+.combo-val.lit{color:var(--text-primary);}
+.combo-sub{font-size:9px;letter-spacing:.4em;color:var(--text-mid);margin-top:2px;}
+.tap-lbl{position:absolute;bottom:-44px;left:50%;transform:translateX(-50%);
+  font-size:11px;font-weight:700;letter-spacing:.3em;opacity:0;white-space:nowrap;transition:opacity .08s;z-index:3;}
+.spd-wrap{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);width:min(180px,50vw);z-index:2;pointer-events:none;}
+.spd-bar-bg{height:2px;background:var(--text-dim);border-radius:2px;}
+.spd-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .3s,background .3s;width:4%;}
+.spd-lbl{font-size:8px;letter-spacing:.2em;color:var(--text-dim);text-align:center;margin-top:5px;}
+.quit-btn{position:absolute;bottom:18px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.3em;
+  color:var(--text-dim);background:transparent;border:none;cursor:pointer;z-index:3;pointer-events:all;}
+
+#flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:10;transition:opacity .05s;}
+#vignette{position:fixed;inset:0;pointer-events:none;z-index:9;opacity:0;transition:opacity .6s;
+  background:radial-gradient(ellipse at center,transparent 30%,color-mix(in srgb,var(--miss) 70%,transparent) 100%);}
+#shatter{position:fixed;inset:0;pointer-events:none;z-index:11;display:none;}
+.shard{position:absolute;border-radius:2px;background:var(--accent);}
+#cd{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:var(--bg);z-index:20;font-size:clamp(5rem,20vw,8rem);font-weight:700;
+  color:var(--accent);opacity:0;pointer-events:none;transition:opacity .15s;}
+#cd.show{opacity:1;pointer-events:all;}
+
+/* RESULT */
+#result{align-items:flex-start;padding:40px 32px 80px;justify-content:flex-start;overflow-y:auto;overflow-x:hidden;}
+.rl{font-size:9px;letter-spacing:.35em;color:var(--text-dim);margin-bottom:4px;}
+.rs{font-size:clamp(3rem,12vw,5.5rem);font-weight:700;letter-spacing:.02em;line-height:1;}
+.rstats{display:grid;grid-template-columns:1fr 1fr;gap:18px 32px;margin-bottom:28px;width:100%;max-width:320px;}
+.sv{font-size:1.5rem;font-weight:700;}
+.sk{font-size:9px;letter-spacing:.25em;color:var(--text-dim);margin-top:2px;}
+.rbtns{display:flex;gap:10px;margin-top:4px;}
+.rbtn{padding:14px 24px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;
+  letter-spacing:.4em;cursor:pointer;transition:all .15s;border:none;}
+.rbtn.p{background:var(--accent);color:var(--bg);}
+.rbtn.p:active{filter:brightness(.85);}
+.rbtn.s{background:transparent;border:1px solid var(--text-dim);color:var(--text-mid);}
+.new-best-row{display:flex;align-items:baseline;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
+.new-best-badge{display:inline-block;font-size:8px;letter-spacing:.2em;color:var(--bg);
+  background:var(--accent);padding:3px 8px;border-radius:2px;font-weight:700;vertical-align:middle;}
+.unlock-toast{margin-bottom:14px;padding:12px 14px;border:1px solid var(--accent);border-radius:4px;
+  background:color-mix(in srgb,var(--accent) 8%,transparent);}
+.unlock-toast-title{font-size:8px;letter-spacing:.3em;color:var(--accent);margin-bottom:4px;}
+.unlock-toast-name{font-size:11px;font-weight:700;letter-spacing:.15em;}
+.unlock-toast-reward{font-size:9px;letter-spacing:.12em;color:var(--text-mid);margin-top:4px;}
+#rUnlocks{margin-bottom:16px;}
+
+/* STATS */
+.stat-tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--text-dim);border-radius:4px;overflow:hidden;width:100%;max-width:300px;}
+.stat-tab{flex:1;padding:10px 0;text-align:center;font-size:9px;font-weight:700;letter-spacing:.2em;cursor:pointer;
+  color:var(--text-mid);background:transparent;border:none;font-family:'IBM Plex Mono',monospace;transition:all .15s;}
+.stat-tab.active{background:var(--accent);color:var(--bg);}
+.stat-panel{display:none;}
+.stat-panel.active{display:block;}
+.stat-hero{margin-bottom:24px;padding:16px 0 14px;border-bottom:1px solid var(--text-dim);}
+.stat-hero-label{font-size:9px;letter-spacing:.35em;color:var(--text-dim);margin-bottom:6px;}
+.stat-hero-val{font-size:clamp(2.8rem,10vw,4.2rem);font-weight:700;color:var(--accent);line-height:1;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 28px;margin-bottom:24px;}
+.stat-cell-val{font-size:1.4rem;font-weight:700;}
+.stat-cell-key{font-size:8px;letter-spacing:.28em;color:var(--text-dim);margin-top:2px;}
+.stat-run{display:flex;justify-content:space-between;align-items:center;
+  padding:9px 0;border-bottom:1px solid var(--text-dim);}
+.stat-run-score{font-size:10px;font-weight:700;letter-spacing:.05em;}
+.stat-run-meta{font-size:9px;color:var(--text-mid);letter-spacing:.1em;text-align:right;}
+.stat-run.is-best .stat-run-score{color:var(--accent);}
+
+/* UNLOCKS */
+.unlock-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.unlock-card{padding:14px 16px;border-radius:4px;border:1px solid var(--text-dim);transition:all .2s;}
+.unlock-card.earned{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,transparent);}
+.unlock-card.locked-card{opacity:.55;}
+.uc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+.uc-name{font-size:10px;font-weight:700;letter-spacing:.2em;}
+.uc-badge{font-size:7px;letter-spacing:.25em;padding:2px 7px;border-radius:2px;font-weight:700;}
+.earned .uc-badge{background:var(--accent);color:var(--bg);}
+.locked-card .uc-badge{background:var(--text-dim);color:var(--bg);}
+.uc-desc{font-size:9px;letter-spacing:.12em;color:var(--text-mid);line-height:1.5;}
+.uc-reward{font-size:8px;letter-spacing:.15em;color:var(--accent);margin-top:6px;opacity:.8;}
+.locked-card .uc-reward{color:var(--text-mid);}
+.uc-prog{margin-top:8px;height:2px;background:var(--text-dim);border-radius:2px;}
+.uc-prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s;}
+
+/* lock hint toast */
+.lock-hint{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
+  background:var(--bg);border:1px solid var(--accent);border-radius:4px;padding:10px 18px;
+  font-size:9px;letter-spacing:.2em;color:var(--accent);z-index:50;
+  opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;}
+.lock-hint.show{opacity:1;}
+
+/* DAILY STREAK */
+.streak-row{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+.streak-fire{font-size:1.3rem;line-height:1;}
+.streak-info{display:flex;flex-direction:column;}
+.streak-count{font-size:1.1rem;font-weight:700;letter-spacing:.05em;color:var(--accent);line-height:1;}
+.streak-label{font-size:8px;letter-spacing:.3em;color:var(--text-mid);margin-top:2px;}
+.streak-dots{display:flex;gap:5px;align-items:center;margin-bottom:28px;}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--text-dim);transition:background .3s,transform .2s;}
+.sdot.done{background:var(--accent);}
+.sdot.today{background:var(--accent);transform:scale(1.35);box-shadow:0 0 6px var(--accent);}
+.sdot-lbl{font-size:7px;letter-spacing:.15em;color:var(--text-dim);margin-left:4px;}
+
+/* XP / RANK */
+.xp-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.rank-badge{font-size:8px;font-weight:700;letter-spacing:.2em;padding:3px 9px;border-radius:2px;background:var(--accent);color:var(--bg);flex-shrink:0;}
+.xp-bar-wrap{flex:1;height:4px;background:var(--text-dim);border-radius:4px;overflow:hidden;}
+.xp-bar-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .6s cubic-bezier(.2,.8,.3,1);}
+.xp-label{font-size:8px;letter-spacing:.18em;color:var(--text-mid);margin-top:3px;}
+.xp-gained{font-size:9px;letter-spacing:.15em;color:var(--accent);font-weight:700;}
+
+/* ANIM */
+@keyframes rIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.rIn{animation:rIn .3s ease forwards;}
+@keyframes shake{0%{transform:translate(0)}12%{transform:translate(-10px,4px)}25%{transform:translate(9px,-5px)}
+  40%{transform:translate(-8px,3px)}58%{transform:translate(6px,-3px)}74%{transform:translate(-4px,2px)}
+  88%{transform:translate(2px,-1px)}100%{transform:translate(0)}}
+@keyframes nudge{0%{transform:translate(0)}35%{transform:translate(3px,-2px)}70%{transform:translate(-2px,1px)}100%{transform:translate(0)}}
+@keyframes scorePop{0%{transform:scale(1)}40%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes comboPop{0%{transform:scale(1)}40%{transform:scale(1.15)}100%{transform:scale(1)}}
+.shake{animation:shake .44s ease;}
+.nudge{animation:nudge .22s ease;}
+.sPop{animation:scorePop .18s ease;}
+.cPop{animation:comboPop .18s ease;}
+
+/* NAME MODAL */
+#nameModal{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:40px 32px;opacity:0;pointer-events:none;transition:opacity .4s;}
+#nameModal.show{opacity:1;pointer-events:all;}
+.nm-logo{font-size:clamp(2.8rem,14vw,5rem);font-weight:700;letter-spacing:.4em;margin-bottom:6px;
+  background:linear-gradient(135deg,var(--text-primary) 40%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.nm-tagline{font-size:8px;letter-spacing:.45em;color:var(--text-dim);margin-bottom:48px;}
+.nm-title{font-size:11px;font-weight:700;letter-spacing:.35em;margin-bottom:8px;color:var(--text-primary);}
+.nm-sub{font-size:9px;letter-spacing:.2em;color:var(--text-mid);margin-bottom:28px;text-align:center;line-height:1.9;}
+.nm-input-wrap{position:relative;width:100%;max-width:300px;margin-bottom:32px;}
+.nm-input{width:100%;background:transparent;border:none;border-bottom:2px solid var(--text-dim);
+  padding:12px 4px;font-family:'IBM Plex Mono',monospace;font-size:1.3rem;font-weight:700;letter-spacing:.12em;
+  color:var(--text-primary);outline:none;text-align:center;caret-color:var(--accent);transition:border-color .2s;box-sizing:border-box;}
+.nm-input:focus{border-bottom-color:var(--accent);}
+.nm-input::placeholder{color:var(--text-dim);font-size:.9rem;letter-spacing:.15em;}
+.nm-char-count{position:absolute;right:4px;bottom:-18px;font-size:8px;letter-spacing:.15em;color:var(--text-dim);}
+.nm-btn{width:220px;height:52px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;
+  letter-spacing:.5em;cursor:pointer;background:var(--accent);color:var(--bg);border:none;transition:all .15s;margin-bottom:16px;}
+.nm-btn:active{filter:brightness(.85);transform:scale(.97);}
+.nm-btn:disabled{opacity:.4;cursor:default;}
+.nm-skip{font-size:8px;letter-spacing:.25em;color:var(--text-dim);cursor:pointer;background:none;border:none;
+  font-family:'IBM Plex Mono',monospace;padding:8px;text-decoration:underline;text-underline-offset:3px;}
+
+/* ADMIN PANEL */
+#admin{align-items:flex-start;padding:44px 24px 60px;justify-content:flex-start;overflow-y:auto;}
+.adm-wrap{width:100%;max-width:480px;}
+.adm-hero{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:10px;}
+.adm-title{font-size:clamp(1.2rem,5vw,1.8rem);font-weight:700;letter-spacing:.3em;}
+.adm-sub{font-size:8px;letter-spacing:.2em;color:var(--text-mid);margin-top:4px;}
+.adm-stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;}
+.adm-stat{padding:14px 12px;border:1px solid var(--text-dim);border-radius:4px;}
+.adm-stat-val{font-size:1.4rem;font-weight:700;color:var(--accent);}
+.adm-stat-key{font-size:8px;letter-spacing:.2em;color:var(--text-dim);margin-top:3px;}
+.adm-table-head{display:grid;grid-template-columns:1fr 52px 52px 44px 56px;gap:6px;
+  padding:6px 10px;margin-bottom:4px;}
+.adm-th{font-size:7px;letter-spacing:.2em;color:var(--text-dim);}
+.adm-row{display:grid;grid-template-columns:1fr 52px 52px 44px 56px;gap:6px;
+  padding:10px 10px;border-bottom:1px solid var(--text-dim);align-items:center;transition:background .15s;}
+.adm-row:hover{background:color-mix(in srgb,var(--accent) 5%,transparent);}
+.adm-name{font-size:10px;font-weight:700;letter-spacing:.08em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.adm-date{font-size:8px;letter-spacing:.08em;color:var(--text-mid);}
+.adm-mins{font-size:10px;font-weight:700;color:var(--accent);}
+.adm-score{font-size:9px;color:var(--text-mid);}
+.adm-online{display:inline-block;width:6px;height:6px;border-radius:50%;background:#44ff88;
+  box-shadow:0 0 6px #44ff88;margin-right:6px;vertical-align:middle;}
+.adm-empty{font-size:10px;letter-spacing:.2em;color:var(--text-dim);padding:20px 0;text-align:center;}
+.adm-filter{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.adm-chip{padding:6px 12px;border-radius:3px;border:1px solid var(--text-dim);cursor:pointer;
+  font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:700;letter-spacing:.15em;
+  color:var(--text-mid);background:transparent;transition:all .15s;}
+.adm-chip.sel{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);}
+.adm-refresh{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.2em;color:var(--text-mid);
+  background:transparent;border:1px solid var(--text-dim);border-radius:3px;padding:6px 12px;cursor:pointer;}
+.adm-refresh:active{color:var(--accent);border-color:var(--accent);}
+#admPwScreen{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:40px;z-index:2;}
+.adm-pw-input{width:100%;max-width:240px;background:transparent;border:none;border-bottom:2px solid var(--accent);
+  padding:10px 4px;font-family:'IBM Plex Mono',monospace;font-size:1rem;font-weight:700;letter-spacing:.2em;
+  color:var(--text-primary);outline:none;text-align:center;margin-bottom:24px;caret-color:var(--accent);}
+.adm-pw-err{font-size:9px;letter-spacing:.2em;color:var(--miss);margin-top:-16px;margin-bottom:20px;min-height:16px;}
+.cfg-btn-adm{position:absolute;top:20px;left:20px;background:none;border:none;color:var(--text-mid);
+  cursor:pointer;padding:8px;display:flex;z-index:5;font-family:'IBM Plex Mono',monospace;
+  font-size:8px;letter-spacing:.2em;}
+
+/* SUPER MODES */
+.super-modes-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px;}
+.sm-card{padding:14px 12px;border:1px solid var(--text-dim);border-radius:4px;cursor:pointer;transition:all .2s;text-align:center;}
+.sm-card:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);}
+.sm-card.active-mode{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent);box-shadow:0 0 12px color-mix(in srgb,var(--accent) 30%,transparent);}
+.sm-icon{font-size:1.4rem;margin-bottom:6px;}
+.sm-name{font-size:8px;font-weight:700;letter-spacing:.2em;color:var(--text-primary);margin-bottom:3px;}
+.sm-desc{font-size:7px;letter-spacing:.1em;color:var(--text-mid);line-height:1.4;}
+.sm-status{font-size:7px;letter-spacing:.15em;color:var(--accent);margin-top:5px;font-weight:700;}
+.adm-section-title{font-size:8px;letter-spacing:.3em;color:var(--text-dim);margin-bottom:12px;margin-top:4px;border-top:1px solid var(--text-dim);padding-top:20px;}
+
+
+/* CHALLENGE */
+.hbtn-challenge{border-color:var(--accent)!important;color:var(--accent)!important;}
+.ch-incoming-card{padding:20px 18px;border:1px solid var(--accent);border-radius:6px;
+  background:color-mix(in srgb,var(--accent) 8%,transparent);margin-bottom:20px;}
+.ch-from{font-size:8px;letter-spacing:.3em;color:var(--text-mid);margin-bottom:6px;}
+.ch-name{font-size:clamp(1.4rem,6vw,2rem);font-weight:700;letter-spacing:.15em;margin-bottom:4px;}
+.ch-target-lbl{font-size:9px;letter-spacing:.2em;color:var(--text-mid);margin-bottom:14px;}
+.ch-target-val{color:var(--accent);font-weight:700;}
+.ch-setter-score{font-size:9px;letter-spacing:.15em;color:var(--text-mid);margin-bottom:18px;}
+.ch-board-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--text-dim);}
+.ch-board-rank{font-size:10px;font-weight:700;color:var(--text-dim);width:20px;flex-shrink:0;}
+.ch-board-rank.gold{color:#ffd700;}
+.ch-board-name{flex:1;font-size:10px;font-weight:700;letter-spacing:.08em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ch-board-score{font-size:10px;font-weight:700;color:var(--accent);}
+.ch-board-badge{font-size:7px;letter-spacing:.18em;padding:2px 6px;border-radius:2px;font-weight:700;}
+.ch-board-badge.won{background:var(--accent);color:var(--bg);}
+.ch-board-badge.lost{background:var(--text-dim);color:var(--bg);}
+.ch-progress-wrap{position:absolute;top:56px;left:0;right:0;padding:0 28px;z-index:3;pointer-events:none;}
+.ch-progress-bar-bg{height:3px;background:var(--text-dim);border-radius:3px;}
+.ch-progress-bar-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s;}
+.ch-progress-lbl{display:flex;justify-content:space-between;margin-top:4px;}
+.ch-progress-lbl span{font-size:7px;letter-spacing:.18em;color:var(--text-mid);}
+.ch-win-overlay{position:fixed;inset:0;background:var(--bg);z-index:50;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:40px;opacity:0;pointer-events:none;transition:opacity .3s;}
+.ch-win-overlay.show{opacity:1;pointer-events:all;}
+.ch-win-title{font-size:clamp(2rem,9vw,3.5rem);font-weight:700;letter-spacing:.3em;margin-bottom:8px;}
+.ch-win-sub{font-size:10px;letter-spacing:.25em;color:var(--text-mid);margin-bottom:32px;text-align:center;line-height:1.8;}
+/* CHALLENGE CODE INPUT */
+.ch-code-input-row{display:flex;gap:12px;justify-content:flex-start;}
+.ch-digit{width:56px;height:68px;border-radius:6px;border:2px solid var(--text-dim);
+  background:transparent;font-family:'IBM Plex Mono',monospace;font-size:2rem;font-weight:700;
+  color:var(--text-primary);text-align:center;caret-color:var(--accent);outline:none;
+  transition:border-color .15s;}
+.ch-digit:focus{border-color:var(--accent);}
+.ch-digit.filled{border-color:var(--accent);color:var(--accent);}
+
+
+/* SCREEN SHAKE */
+@keyframes screenShake {
+  0%{transform:translate(0,0) rotate(0deg)}
+  15%{transform:translate(-6px,4px) rotate(-.4deg)}
+  30%{transform:translate(5px,-3px) rotate(.3deg)}
+  45%{transform:translate(-4px,5px) rotate(-.2deg)}
+  60%{transform:translate(3px,-2px) rotate(.15deg)}
+  80%{transform:translate(-2px,1px) rotate(-.1deg)}
+  100%{transform:translate(0,0) rotate(0deg)}
+}
+.screen-shake{ animation:screenShake 0.38s ease-out; }
+
+/* SPEED BURST banner */
+.speed-burst-banner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-family:'IBM Plex Mono',monospace;font-size:clamp(1.4rem,7vw,2.2rem);font-weight:700;
+  letter-spacing:.35em;color:var(--accent);text-shadow:0 0 20px var(--accent);
+  pointer-events:none;z-index:20;opacity:0;transition:opacity .15s;}
+.speed-burst-banner.show{opacity:1;}
+
+/* SLOW-MO overlay */
+#slowMoOverlay{position:absolute;inset:0;border-radius:inherit;
+  opacity:0;pointer-events:none;
+  background:radial-gradient(ellipse at center, transparent 60%, color-mix(in srgb,var(--perfect) 12%,transparent) 100%);
+  transition:opacity .12s;z-index:2;}
+#slowMoOverlay.show{opacity:1;}
+
+/* HOOK SKIN selector */
+.skin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+.skin-card{padding:14px 8px;border:1px solid var(--text-dim);border-radius:6px;
+  cursor:pointer;text-align:center;transition:all .15s;}
+.skin-card:hover,.skin-card.sel{border-color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 10%,transparent);}
+.skin-card svg{display:block;margin:0 auto 6px;}
+.skin-lbl{font-size:7px;letter-spacing:.18em;color:var(--text-mid);}
+
+/* COMBO MULTIPLIER label */
+#comboMultLbl{position:absolute;top:8px;right:12px;font-family:'IBM Plex Mono',monospace;
+  font-size:9px;font-weight:700;letter-spacing:.2em;color:var(--accent);
+  opacity:0;transition:opacity .2s;pointer-events:none;}
+#comboMultLbl.show{opacity:1;}
+/* SECRET RITUAL dots */
+#focusTitle{cursor:default;transition:opacity .08s;}
+#focusTitle::after{
+  content:attr(data-dots);
+  display:block;
+  font-size:10px;
+  letter-spacing:.4em;
+  color:var(--accent);
+  opacity:.6;
+  min-height:14px;
+  margin-top:4px;
+  font-weight:400;
+}
+/* LOADING SCREEN */
+#loadScreen{position:fixed;inset:0;background:var(--bg);z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .5s ease;}
+#loadScreen.hide{opacity:0;pointer-events:none;}
+.load-logo{font-size:clamp(3rem,14vw,5rem);font-weight:700;letter-spacing:.45em;
+  color:var(--accent);margin-bottom:6px;
+  animation:loadPulse 1.2s ease-in-out infinite;}
+.load-tag{font-size:9px;letter-spacing:.45em;color:var(--text-mid);margin-bottom:48px;}
+.load-bar-wrap{width:min(200px,55vw);height:2px;background:var(--text-dim);border-radius:2px;overflow:hidden;}
+.load-bar{height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width .35s ease;}
+.load-status{font-size:8px;letter-spacing:.3em;color:var(--text-dim);margin-top:12px;}
+@keyframes loadPulse{0%,100%{opacity:.6}50%{opacity:1}}
+/* MILESTONE TOAST */
+#milestoneToast{
+  position:fixed;top:0;left:50%;transform:translateX(-50%) translateY(-100%);
+  background:var(--accent);color:var(--bg);
+  font-family:'IBM Plex Mono',monospace;font-weight:700;
+  font-size:10px;letter-spacing:.35em;
+  padding:8px 20px;border-radius:0 0 8px 8px;
+  white-space:nowrap;pointer-events:none;z-index:10;
+  transition:transform .3s cubic-bezier(.2,.8,.3,1),opacity .3s ease;
+  opacity:0;
+}
+#milestoneToast.show{transform:translateX(-50%) translateY(0%);opacity:1;}
+
+/* ── CHANGE 2: CRT SCANLINES ──────────────────────────────────── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,.18) 2px,
+    rgba(0,0,0,.18) 4px
+  );
+  pointer-events:none;z-index:999;
+}
+
+/* ── CHANGE 3: HOLLOW GLOWING TITLE ──────────────────────────── */
+.title{
+  -webkit-text-stroke:2px var(--accent);
+  color:transparent;
+  text-shadow:0 0 24px var(--accent),0 0 48px color-mix(in srgb,var(--accent) 40%,transparent);
+  animation:titleBreathe 2.8s ease-in-out infinite;
+}
+@keyframes titleBreathe{
+  0%,100%{text-shadow:0 0 18px var(--accent),0 0 40px color-mix(in srgb,var(--accent) 30%,transparent);}
+  50%{text-shadow:0 0 32px var(--accent),0 0 72px color-mix(in srgb,var(--accent) 55%,transparent),0 0 100px color-mix(in srgb,var(--accent) 20%,transparent);}
+}
+
+/* ── CHANGE 4: SHARP BUTTONS + SCAN-WIPE HOVER ───────────────── */
+.hbtn{
+  border-radius:0 !important;
+  position:relative;overflow:hidden;
+}
+.hbtn::after{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
+  transition:left .4s ease;
+}
+.hbtn:hover::after{ left:100%; }
+.rbtn{ border-radius:0 !important; position:relative; overflow:hidden; }
+.rbtn::after{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
+  transition:left .4s ease;
+}
+.rbtn:hover::after{ left:100%; }
+
+/* ── CHANGE 5: SHARP CHIPS WITH GLASS BACKGROUND ─────────────── */
+.chip{
+  border-radius:0 !important;
+  background:color-mix(in srgb,var(--accent) 5%,rgba(255,255,255,.03)) !important;
+  backdrop-filter:blur(4px);
+}
+.chip.sel{
+  background:color-mix(in srgb,var(--accent) 14%,rgba(255,255,255,.05)) !important;
+}
+
+/* ── CHANGE 6: EQUALIZER BARS (replace loading bar) ──────────── */
+.load-bar-wrap{ display:none; }
+.load-eq{
+  display:flex;align-items:flex-end;gap:4px;height:32px;margin-bottom:0;
+}
+.eq-bar{
+  width:8px;border-radius:0;background:var(--accent);
+  animation:eqAnim 0.6s ease-in-out infinite;
+  box-shadow:0 0 8px var(--accent);
+}
+.eq-bar:nth-child(1){animation-delay:0s;}
+.eq-bar:nth-child(2){animation-delay:0.1s;}
+.eq-bar:nth-child(3){animation-delay:0.2s;}
+.eq-bar:nth-child(4){animation-delay:0.15s;}
+.eq-bar:nth-child(5){animation-delay:0.05s;}
+.eq-bar:nth-child(6){animation-delay:0.25s;}
+@keyframes eqAnim{
+  0%,100%{height:6px;opacity:.5;}
+  50%{height:32px;opacity:1;}
+}
+
+/* ── CHANGE 7: MECHANICAL SCORE COUNTER ─────────────────────── */
+@keyframes mechTick{
+  0%{transform:translateY(-6px) scaleY(1.06);opacity:.6;}
+  40%{transform:translateY(2px) scaleY(.97);}
+  100%{transform:translateY(0) scaleY(1);opacity:1;}
+}
+.sPop{ animation:mechTick .15s cubic-bezier(.2,.8,.3,1) !important; }
+
+/* ── CHANGE 8: VHS RGB GLITCH ON COMBO ×5+ ──────────────────── */
+@keyframes vhsGlitch{
+  0%,90%,100%{text-shadow:none;}
+  91%{text-shadow:2px 0 #ff0055,-2px 0 #00ffcc;letter-spacing:.08em;}
+  93%{text-shadow:-3px 0 #ff0055,3px 0 #00ffcc;letter-spacing:.04em;}
+  95%{text-shadow:1px 0 #0044ff,-1px 0 #ff4400;letter-spacing:.06em;}
+  97%{text-shadow:none;}
+}
+.combo-val.glitch{ animation:vhsGlitch 1.1s steps(1) infinite; }
+
+/* ── CHANGE 9: SEGMENTED SPEED BAR (6 blocks) ───────────────── */
+.spd-bar-bg{ display:none; }
+.spd-seg-wrap{
+  display:flex;gap:3px;align-items:center;
+  width:min(180px,50vw);
+}
+.spd-seg{
+  flex:1;height:8px;border-radius:0;
+  background:var(--text-dim);
+  transition:background .25s,box-shadow .25s;
+}
+.spd-seg.active{ background:var(--accent); }
+.spd-seg.danger-seg{ background:var(--miss);box-shadow:0 0 6px var(--miss); }
+
+/* ── CHANGE 10: COUNTER-ROTATING DASHED OUTER RING ──────────── */
+@keyframes ctrRotate{ from{transform:rotate(0deg)}to{transform:rotate(-360deg)} }
+#outerDashRing{
+  transform-origin:50px 50px;
+  animation:ctrRotate 12s linear infinite;
+}
+
+/* ── CHANGE 11: PHOSPHOR GLOW LAG ARC ───────────────────────── */
+#phosphorArc{
+  fill:none;
+  stroke:var(--accent);
+  stroke-width:13;
+  stroke-linecap:round;
+  opacity:.22;
+  filter:blur(3px);
+  cx:50;cy:50;r:38;
+  transform:rotate(-90deg);
+  transform-origin:50px 50px;
+  stroke-dasharray:0 239;
+  stroke-dashoffset:0;
+  transition:stroke-dasharray .55s cubic-bezier(.2,.8,.3,1);
+}
+
+/* ── CHANGE 12: RESULT SCORE GRADIENT TEXT ───────────────────── */
+.rs{
+  background:linear-gradient(135deg,var(--text-primary) 30%,var(--accent) 70%,var(--accent2));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+/* ── CHANGE 13: HOME SCREEN GLOW ORB ─────────────────────────── */
+#homeGlowOrb{
+  position:absolute;
+  width:min(320px,85vw);height:min(320px,85vw);
+  border-radius:50%;
+  background:radial-gradient(ellipse at center,
+    color-mix(in srgb,var(--accent) 18%,transparent) 0%,
+    transparent 70%
+  );
+  pointer-events:none;z-index:0;
+  animation:orbPulse 3s ease-in-out infinite;
+}
+@keyframes orbPulse{
+  0%,100%{opacity:.7;transform:scale(.95);}
+  50%{opacity:1;transform:scale(1.05);}
+}
+#home .title{ position:relative;z-index:1; }
+#home .home-lives,#home .hbtn,#home #homeGreeting,#home #homeStreak,
+#home #streakDots,#home #homeBestScore,#home .cfg-btn,#home #installBtn{
+  position:relative;z-index:1;
+}
+
+/* ── GLOBAL LEADERBOARD SCREEN ───────────────────────────────── */
+#globalBoard{align-items:flex-start;padding:44px 32px 60px;justify-content:flex-start;overflow-y:auto;}
+.gb-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--text-dim);}
+.gb-rank{font-size:10px;font-weight:700;color:var(--text-dim);width:24px;flex-shrink:0;}
+.gb-rank.gold{color:#ffd700;}
+.gb-rank.silver{color:#c0c0c0;}
+.gb-rank.bronze{color:#cd7f32;}
+.gb-name{flex:1;font-size:10px;font-weight:700;letter-spacing:.08em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gb-score{font-size:10px;font-weight:700;color:var(--accent);}
+.gb-diff{font-size:7px;letter-spacing:.18em;padding:2px 6px;border:1px solid var(--text-dim);color:var(--text-mid);}
+.gb-empty{font-size:10px;letter-spacing:.2em;color:var(--text-dim);padding:20px 0;text-align:center;}
+.gb-you{ background:color-mix(in srgb,var(--accent) 8%,transparent); }
+.gb-you .gb-name{ color:var(--accent); }
+</style>
+<body>
+<!-- LOADING SCREEN -->
+<div id="loadScreen">
+  <div class="load-logo">FOCUS</div>
+  <div class="load-tag">TAP. REACT. SURVIVE.</div>
+  <div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
+  <div class="load-eq" id="loadEq">
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+  </div>
+  <div class="load-status" id="loadStatus">LOADING...</div>
+</div>
+<canvas id="bgCanvas"></canvas>
+<div id="flash"></div>
+<div id="vignette"></div>
+<div id="shatter"></div>
+<div class="lock-hint" id="lockHint"></div>
+<!-- NAME MODAL (first launch) -->
+<div id="nameModal">
+  <div class="nm-logo">FOCUS</div>
+  <div class="nm-tagline">TAP. REACT. SURVIVE.</div>
+  <div class="nm-title">WHAT'S YOUR NAME?</div>
+  <div class="nm-sub">Your friends will see this when you<br>challenge them or top the board.</div>
+  <div class="nm-input-wrap">
+    <input class="nm-input" id="nameInput" type="text" maxlength="20" placeholder="ENTER NAME" autocomplete="off" spellcheck="false" oninput="onNmInput(this)">
+    <span class="nm-char-count" id="nmCharCount">0 / 20</span>
+  </div>
+  <button class="nm-btn" id="nmBtn" onclick="submitName()" disabled>LET'S PLAY →</button>
+  <button class="nm-skip" onclick="skipName()">SKIP FOR NOW</button>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="screen scroll-screen" id="admin">
+  <div id="admPwScreen">
+    <div class="sback" onclick="showScreen('home')" style="position:absolute;top:44px;left:32px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      <span class="sback-lbl">BACK</span>
+    </div>
+    <div style="font-size:9px;letter-spacing:.3em;color:var(--text-mid);margin-bottom:24px;">ADMIN ACCESS</div>
+    <input class="adm-pw-input" id="admPwInput" type="password" placeholder="PASSWORD"
+      onkeydown="if(event.key==='Enter')checkAdminPw()">
+    <div class="adm-pw-err" id="admPwErr"></div>
+    <button class="nm-btn" onclick="checkAdminPw()">ENTER</button>
+  </div>
+  <div class="adm-wrap" id="admContent" style="display:none">
+    <button class="cfg-btn-adm sback" onclick="showScreen('home')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      &nbsp;BACK
+    </button>
+    <div class="adm-hero">
+      <div>
+        <div class="adm-title">ADMIN PANEL</div>
+        <div class="adm-sub" id="admLastRefresh">—</div>
+      </div>
+      <button class="adm-refresh" onclick="loadAdminData()">↻ REFRESH</button>
+    </div>
+    <div class="adm-stat-row" id="admStats"></div>
+    <div class="adm-filter" id="admFilter"></div>
+    <div class="adm-table-head">
+      <div class="adm-th">PLAYER</div>
+      <div class="adm-th">JOINED</div>
+      <div class="adm-th">LEFT</div>
+      <div class="adm-th">TIME</div>
+      <div class="adm-th">BEST</div>
+    </div>
+    <div id="admRows"></div>
+
+    <!-- SUPER MODES -->
+    <div class="adm-section-title">⚡ SUPER MODES</div>
+    <div class="super-modes-grid" id="superModesGrid">
+      <div class="sm-card" id="sm-godmode" onclick="toggleSuperMode('godmode')">
+        <div class="sm-icon">🛡️</div>
+        <div class="sm-name">GOD MODE</div>
+        <div class="sm-desc">Infinite lives for all players. Misses don't count.</div>
+        <div class="sm-status" id="sm-godmode-status">OFF</div>
+      </div>
+      <div class="sm-card" id="sm-slowmo" onclick="toggleSuperMode('slowmo')">
+        <div class="sm-icon">🐌</div>
+        <div class="sm-name">SLOW MOTION</div>
+        <div class="sm-desc">Ring speed locked to ×0.4. Great for beginners.</div>
+        <div class="sm-status" id="sm-slowmo-status">OFF</div>
+      </div>
+      <div class="sm-card" id="sm-turbo" onclick="toggleSuperMode('turbo')">
+        <div class="sm-icon">⚡</div>
+        <div class="sm-name">TURBO</div>
+        <div class="sm-desc">Speed starts at ×3.0. Insane challenge mode.</div>
+        <div class="sm-status" id="sm-turbo-status">OFF</div>
+      </div>
+      <div class="sm-card" id="sm-widezone" onclick="toggleSuperMode('widezone')">
+        <div class="sm-icon">🎯</div>
+        <div class="sm-name">MEGA ZONE</div>
+        <div class="sm-desc">Perfect zone is 3× wider. Every tap is perfect.</div>
+        <div class="sm-status" id="sm-widezone-status">OFF</div>
+      </div>
+      <div class="sm-card" id="sm-infinitelives" onclick="toggleSuperMode('infinitelives')">
+        <div class="sm-icon">❤️</div>
+        <div class="sm-name">∞ LIVES</div>
+        <div class="sm-desc">Start every run with 99 lives. No game overs.</div>
+        <div class="sm-status" id="sm-infinitelives-status">OFF</div>
+      </div>
+      <div class="sm-card" id="sm-rainbow" onclick="toggleSuperMode('rainbow')">
+        <div class="sm-icon">🌈</div>
+        <div class="sm-name">RAINBOW</div>
+        <div class="sm-desc">Accent color cycles through the spectrum mid-game.</div>
+        <div class="sm-status" id="sm-rainbow-status">OFF</div>
+      </div>
+    </div>
+    <div id="activeModesBanner" style="display:none;padding:10px 14px;border:1px solid var(--accent);border-radius:4px;background:color-mix(in srgb,var(--accent) 8%,transparent);margin-bottom:20px;font-size:8px;letter-spacing:.2em;color:var(--accent);">
+      ⚠ SUPER MODE ACTIVE — affects all players on this device
+    </div>
+  </div>
+</div>
+
+
+<!-- HOME -->
+<div class="screen active" id="home">
+  <div id="homeGlowOrb"></div>
+  <button class="cfg-btn" onclick="showScreen('settings')">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </button>
+  <div class="title" id="focusTitle" onclick="secretTap()">FOCUS</div>
+  <div id="homeGreeting" style="font-size:10px;letter-spacing:.3em;color:var(--text-mid);margin-bottom:6px;min-height:16px"></div>
+  <div class="streak-row" id="homeStreak" style="display:none">
+    <div class="streak-fire">🔥</div>
+    <div class="streak-info">
+      <div class="streak-count" id="streakCount">0</div>
+      <div class="streak-label">DAY STREAK</div>
+    </div>
+  </div>
+  <div class="streak-dots" id="streakDots" style="display:none"></div>
+  <div class="home-lives" id="homeLives"></div>
+  <div id="homeBestScore" style="font-size:9px;letter-spacing:.3em;color:var(--text-mid);margin-bottom:18px;min-height:14px"></div>
+  <button class="hbtn p" onclick="startGame()">PLAY</button>
+  <button class="hbtn s hbtn-challenge" onclick="showScreen('challenge')">🎯 CHALLENGE</button>
+  <button class="hbtn s" onclick="showScreen('settings')">SETTINGS</button>
+  <button class="hbtn s" onclick="showScreen('stats')">STATS</button>
+  <button class="hbtn s" onclick="showScreen('unlocks')">UNLOCKS</button>
+  <button class="hbtn s" onclick="showGlobalBoard()" style="border-color:var(--accent2);color:var(--accent2)">🌐 GLOBAL BOARD</button>
+  <!-- Admin accessible only via secret ritual: tap FOCUS title 5× -->
+  <button id="installBtn" class="hbtn s" onclick="promptInstall()" style="display:none;margin-top:4px;border-color:var(--accent);color:var(--accent)">⬇ INSTALL APP</button>
+</div>
+
+<!-- CHALLENGE SCREEN -->
+<div class="screen scroll-screen" id="challenge">
+  <div style="width:100%;max-width:400px">
+    <div class="sback" onclick="showScreen('home')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      <span class="sback-lbl">CHALLENGE</span>
+    </div>
+
+    <!-- Mode picker: CREATE or JOIN -->
+    <div id="ch-mode-pick" style="display:flex;gap:0;margin-bottom:28px;border:1px solid var(--text-dim);border-radius:4px;overflow:hidden;max-width:300px">
+      <button class="stat-tab active" id="ch-tab-create" onclick="chSwitchTab('create')">CREATE</button>
+      <button class="stat-tab" id="ch-tab-join"   onclick="chSwitchTab('join')">JOIN</button>
+    </div>
+
+    <!-- ── CREATE panel ── -->
+    <div id="ch-panel-create">
+      <div class="ssec">TARGET SCORE</div>
+      <div class="sopts" id="ch-target-opts"></div>
+      <div class="ssec">CUSTOM TARGET</div>
+      <div class="slider-row" style="max-width:100%">
+        <div class="slider-label-row">
+          <span class="slider-lbl">TARGET</span>
+          <span class="slider-val" id="ch-custom-val">5,000</span>
+        </div>
+        <input type="range" id="ch-custom-slider" min="500" max="50000" step="500" value="5000" oninput="onChTargetSlider(this)">
+      </div>
+      <div class="ssec">DIFFICULTY</div>
+      <div class="sopts" id="ch-diff-opts"></div>
+      <div style="margin-top:24px">
+        <button class="hbtn p" style="width:100%;max-width:300px" id="ch-create-btn" onclick="createChallenge()">🎯 CREATE CHALLENGE</button>
+      </div>
+
+      <!-- Code display after create -->
+      <div id="ch-code-box" style="display:none;margin-top:24px;text-align:center;padding:24px 16px;border:1px solid var(--accent);border-radius:6px;background:color-mix(in srgb,var(--accent) 6%,transparent)">
+        <div style="font-size:8px;letter-spacing:.35em;color:var(--text-mid);margin-bottom:12px">SHARE THIS CODE</div>
+        <div id="ch-code-display" style="font-size:clamp(2.6rem,12vw,4rem);font-weight:700;letter-spacing:.5em;color:var(--accent);margin-bottom:14px"></div>
+        <div style="font-size:8px;letter-spacing:.2em;color:var(--text-mid);margin-bottom:20px" id="ch-code-meta"></div>
+        <button class="hbtn p" style="width:100%;max-width:260px;margin-bottom:10px" onclick="startChallenge(chActive)">▶ PLAY MY RUN</button>
+        <button onclick="chCopyCode()" id="ch-copy-btn" style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.25em;color:var(--accent);background:transparent;border:1px solid var(--accent);border-radius:3px;padding:8px 16px;cursor:pointer;display:block;width:100%;max-width:260px;margin:0 auto">COPY CODE</button>
+      </div>
+    </div>
+
+    <!-- ── JOIN panel ── -->
+    <div id="ch-panel-join" style="display:none">
+      <div style="font-size:9px;letter-spacing:.2em;color:var(--text-mid);margin-bottom:28px;line-height:1.7">Enter the 4-digit code your friend sent you.</div>
+      <div class="ch-code-input-row" id="ch-code-inputs">
+        <input class="ch-digit" id="chd0" maxlength="1" type="text" inputmode="numeric" oninput="chDigitInput(0)" onkeydown="chDigitKey(event,0)">
+        <input class="ch-digit" id="chd1" maxlength="1" type="text" inputmode="numeric" oninput="chDigitInput(1)" onkeydown="chDigitKey(event,1)">
+        <input class="ch-digit" id="chd2" maxlength="1" type="text" inputmode="numeric" oninput="chDigitInput(2)" onkeydown="chDigitKey(event,2)">
+        <input class="ch-digit" id="chd3" maxlength="1" type="text" inputmode="numeric" oninput="chDigitInput(3)" onkeydown="chDigitKey(event,3)">
+      </div>
+      <div id="ch-join-err" style="font-size:9px;letter-spacing:.2em;color:var(--miss);margin-top:14px;min-height:16px"></div>
+      <button class="hbtn p" style="width:100%;max-width:300px;margin-top:20px" onclick="joinChallenge()">JOIN &amp; PLAY</button>
+
+      <!-- Joined challenge card (after successful lookup) -->
+      <div id="ch-joined-card" style="display:none;margin-top:24px;padding:20px 16px;border:1px solid var(--accent);border-radius:6px;background:color-mix(in srgb,var(--accent) 6%,transparent)">
+        <div style="font-size:8px;letter-spacing:.3em;color:var(--text-mid);margin-bottom:6px">CHALLENGE FROM</div>
+        <div id="ch-joined-from" style="font-size:1.4rem;font-weight:700;letter-spacing:.15em;margin-bottom:6px"></div>
+        <div id="ch-joined-meta" style="font-size:9px;letter-spacing:.15em;color:var(--text-mid);margin-bottom:18px;line-height:1.7"></div>
+        <button class="hbtn p" style="width:100%;max-width:260px" onclick="startChallenge(chActive)">🎯 ACCEPT &amp; PLAY</button>
+      </div>
+    </div>
+
+    <!-- Results board (shown after a run) -->
+    <div id="ch-board-panel" style="display:none;margin-top:28px">
+      <div class="adm-section-title" style="border-top:1px solid var(--text-dim);padding-top:20px;margin-top:0">RESULTS</div>
+      <div id="ch-board-rows"></div>
+      <button onclick="chRefreshBoard()" style="margin-top:12px;font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.2em;color:var(--text-mid);background:transparent;border:1px solid var(--text-dim);border-radius:3px;padding:6px 12px;cursor:pointer">↻ REFRESH</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="screen scroll-screen" id="settings">
+  <div style="width:100%;max-width:400px">
+    <div class="sback" onclick="showScreen('home')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      <span class="sback-lbl">SETTINGS</span>
+    </div>
+    <div class="ssec">THEME</div>
+    <div class="sopts" id="themeOpts"></div>
+    <div class="ssec">DIFFICULTY</div>
+    <div class="sopts" id="diffOpts"></div>
+    <div style="font-size:9px;letter-spacing:.2em;color:var(--text-dim);margin-top:-16px;margin-bottom:24px">lives per run · ZEN = no game over</div>
+    <div class="ssec">BACKGROUND</div>
+    <div class="sopts" id="bgOpts"></div>
+    <div class="ssec">STARTING SPEED</div>
+    <div class="slider-row">
+      <div class="slider-label-row">
+        <span class="slider-lbl">SPEED</span>
+        <span class="slider-val" id="startSpeedVal">×1.0</span>
+      </div>
+      <input type="range" id="startSpeedSlider" min="10" max="30" value="10" oninput="onStartSpeedChange(this)">
+    </div>
+    <div class="ssec">OPTIONS</div>
+    <div class="sopts" style="flex-direction:column">
+      <div class="chip toggle sel" id="soundToggle" onclick="toggleSound()">
+        <span>SOUND FX</span>
+        <div class="tog-track"><div class="tog-knob"></div></div>
+      </div>
+      <div class="chip toggle sel" id="sizeToggle" onclick="toggleWindow()">
+        <span>WIDE PERFECT ZONE</span>
+        <div class="tog-track"><div class="tog-knob"></div></div>
+      </div>
+    </div>
+    <div style="margin-top:8px">
+      <button onclick="resetAllTime()" style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.2em;color:var(--text-mid);background:transparent;border:1px solid var(--text-dim);border-radius:4px;padding:8px 14px;cursor:pointer;">RESET ALL-TIME DATA</button>
+    </div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="screen scroll-screen" id="stats">
+  <div style="width:100%;max-width:400px">
+    <div class="sback" onclick="showScreen('home')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      <span class="sback-lbl">PLAYER STATS</span>
+    </div>
+    <div class="stat-tabs">
+      <button class="stat-tab active" onclick="switchStatTab('alltime')">ALL TIME</button>
+      <button class="stat-tab" onclick="switchStatTab('session')">SESSION</button>
+    </div>
+    <!-- ALL TIME panel -->
+    <div class="stat-panel active" id="panel-alltime">
+      <div class="stat-hero">
+        <div class="stat-hero-label">ALL-TIME BEST SCORE</div>
+        <div class="stat-hero-val" id="atBestScore">—</div>
+      </div>
+      <div class="stat-grid" id="atStatGrid"></div>
+      <div class="ssec">TOP RUNS</div>
+      <div id="atHistory"></div>
+    </div>
+    <!-- SESSION panel -->
+    <div class="stat-panel" id="panel-session">
+      <div class="stat-hero">
+        <div class="stat-hero-label">SESSION BEST SCORE</div>
+        <div class="stat-hero-val" id="stBestScore">—</div>
+      </div>
+      <div class="stat-grid" id="statGrid"></div>
+      <div class="ssec">RECENT RUNS</div>
+      <div id="statHistory"></div>
+    </div>
+  </div>
+</div>
+
+<!-- UNLOCKS -->
+<div class="screen scroll-screen" id="unlocks">
+  <div style="width:100%;max-width:400px">
+    <div class="sback" onclick="showScreen('home')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      <span class="sback-lbl">UNLOCKS</span>
+    </div>
+    <div style="font-size:9px;letter-spacing:.2em;color:var(--text-mid);margin-bottom:20px;line-height:1.7">
+      Earn achievements to unlock new themes, backgrounds, and modes.
+    </div>
+    <div class="unlock-grid" id="unlockGrid"></div>
+  </div>
+</div>
+
+<!-- GLOBAL LEADERBOARD -->
+<div class="screen scroll-screen" id="globalBoard">
+  <div style="width:100%;max-width:400px">
+    <div class="sback" onclick="showScreen('home')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      <span class="sback-lbl">GLOBAL BOARD</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:9px;letter-spacing:.2em;color:var(--text-mid)">TOP PLAYERS WORLDWIDE</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="gbDiffFilter" onchange="fetchGlobalLeaderboard()" style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.15em;background:transparent;border:1px solid var(--text-dim);color:var(--text-mid);padding:4px 8px;cursor:pointer;border-radius:0">
+          <option value="all">ALL DIFFS</option>
+          <option value="easy">EASY</option>
+          <option value="normal">NORMAL</option>
+          <option value="hard">HARD</option>
+          <option value="zen">ZEN</option>
+        </select>
+        <button onclick="fetchGlobalLeaderboard()" style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.2em;color:var(--text-mid);background:transparent;border:1px solid var(--text-dim);padding:4px 10px;cursor:pointer;">↻</button>
+      </div>
+    </div>
+    <div id="gbRows"><div class="gb-empty">LOADING...</div></div>
+    <div id="gbYouRow" style="margin-top:16px;display:none">
+      <div style="font-size:8px;letter-spacing:.3em;color:var(--text-dim);margin-bottom:8px;padding-top:12px;border-top:1px solid var(--text-dim)">YOUR BEST</div>
+      <div id="gbYouCard"></div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="game">
+  <div id="milestoneToast"></div>
+  <div class="g-top">
+    <span class="mode-lbl" id="modeLbl">SURVIVAL</span>
+    <div class="lives-num" id="livesNum">5</div>
+  </div>
+  <div class="score-area">
+    <div class="score-num" id="scoreNum">0</div>
+    <div class="score-label">SCORE</div>
+  </div>
+  <div id="comboMultLbl"></div>
+  <div class="ring-area" id="ringArea">
+    <div id="slowMoOverlay"></div>
+    <svg class="ring-svg" id="ringSvg" viewBox="0 0 100 100">
+      <defs>
+        <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="2" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glowStrong" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="3.5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <circle id="trackCircle" fill="none" stroke="var(--ring-track)" stroke-width="13" cx="50" cy="50" r="38"/>
+      <!-- Change 11: Phosphor glow lag arc (behind sweep) -->
+      <circle id="phosphorArc" fill="none" stroke="var(--accent)" stroke-width="13" stroke-linecap="round"
+        cx="50" cy="50" r="38" transform="rotate(-90 50 50)" stroke-dasharray="0 239" stroke-dashoffset="0"
+        opacity=".22" style="filter:blur(3px);transition:stroke-dasharray .55s cubic-bezier(.2,.8,.3,1)"/>
+      <!-- Change 10: Counter-rotating dashed outer ring -->
+      <circle id="outerDashRing" fill="none" stroke="var(--accent)" stroke-width="1" cx="50" cy="50" r="46"
+        stroke-dasharray="4 8" opacity=".28" style="transform-origin:50px 50px;animation:ctrRotate 12s linear infinite"/>
+      <circle id="sweepArc" fill="none" stroke="var(--accent2)" stroke-width="13" stroke-linecap="round"
+        cx="50" cy="50" r="38" transform="rotate(-90 50 50)" stroke-dasharray="0 239" stroke-dashoffset="0"/>
+      <g id="targetGroup" filter="url(#glow)">
+        <!-- outer sharp diamond: wide & flat -->
+        <polygon id="targetRect" fill="var(--perfect)" opacity="0.92" points="0,0"/>
+        <!-- inner sharp diamond: perfect zone -->
+        <polygon id="perfectRect" fill="var(--accent)" opacity="0.75" points="0,0"/>
+      </g>
+      <!-- Combo multiplier ring (outer) - hidden -->
+      <circle id="comboRing" fill="none" stroke="var(--accent)" stroke-width="2.2"
+        cx="50" cy="50" r="46" opacity="0" stroke-dasharray="0 289" transform="rotate(-90 50 50)" style="display:none"/>
+      <!-- Zone pulse ring -->
+      <circle id="zonePulse" fill="none" stroke="var(--perfect)" stroke-width="1.5"
+        cx="50" cy="50" r="38" opacity="0"/>
+      <!-- Trail dots group -->
+      <g id="trailGroup"></g>
+      <!-- Hook tip (styled per skin) -->
+      <circle id="sweepTip" r="3.5" fill="var(--accent)" filter="url(#glowStrong)" opacity="0.9"/>
+      <!-- Hook body shape (skin overlay) -->
+      <path id="hookShape" fill="none" stroke="var(--accent)" stroke-width="2.5"
+        stroke-linecap="round" opacity="0" d=""/>
+    </svg>
+    <div class="tap-lbl" id="tapLbl"></div>
+  </div>
+  <div class="combo-area">
+    <div class="combo-val" id="comboVal"></div>
+    <div class="combo-sub" id="comboPre" style="visibility:hidden">COMBO</div>
+  </div>
+  <div class="spd-wrap">
+    <div class="spd-bar-bg"><div class="spd-bar" id="spdBar"></div></div>
+    <div class="spd-seg-wrap" id="spdSegWrap">
+      <div class="spd-seg" id="seg0"></div>
+      <div class="spd-seg" id="seg1"></div>
+      <div class="spd-seg" id="seg2"></div>
+      <div class="spd-seg" id="seg3"></div>
+      <div class="spd-seg" id="seg4"></div>
+      <div class="spd-seg" id="seg5"></div>
+    </div>
+    <div class="spd-lbl" id="spdLbl">×1.0</div>
+  </div>
+  <div class="ch-progress-wrap" id="chProgressWrap" style="display:none">
+    <div class="ch-progress-bar-bg"><div class="ch-progress-bar-fill" id="chProgressFill" style="width:0%"></div></div>
+    <div class="ch-progress-lbl">
+      <span id="chProgressLeft">0</span>
+      <span id="chProgressRight">TARGET: 0</span>
+    </div>
+  </div>
+  <button class="quit-btn" id="quitBtn">QUIT</button>
+</div>
+
+<!-- CHALLENGE WIN OVERLAY -->
+<div class="ch-win-overlay" id="chWinOverlay">
+  <div class="ch-win-title" id="chWinTitle">YOU WIN!</div>
+  <div class="ch-win-sub" id="chWinSub"></div>
+  <button class="hbtn p" style="width:200px;margin-bottom:10px" onclick="chWinContinue()">SEE RESULTS</button>
+  <button class="hbtn s" style="width:200px" onclick="showScreen('home')">HOME</button>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="result">
+  <div style="width:100%;max-width:360px;display:flex;flex-direction:column;" id="rWrap">
+    <div class="rl" id="rPlayerName"></div>
+    <div class="rl">FINAL SCORE</div>
+    <div class="new-best-row">
+      <div class="rs" id="rScore">0</div>
+      <span id="rNewBest" style="display:none" class="new-best-badge">NEW BEST</span>
+    </div>
+    <div id="rXpRow" style="margin-bottom:20px"></div>
+    <div class="rstats" id="rStats"></div>
+    <div id="rUnlocks"></div>
+    <div style="height:16px"></div>
+    <div class="rbtns" style="padding-bottom:24px">
+      <button class="rbtn p" onclick="startGame()">RETRY</button>
+      <button class="rbtn s" id="rChallengeBtn" onclick="showScreen('challenge')" style="display:none">CHALLENGE</button>
+      <button class="rbtn s" onclick="showScreen('home')">HOME</button>
+    </div>
+  </div>
+</div>
+
+<div id="cd"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────
+// window.storage POLYFILL
+// The real window.storage API only exists inside Claude's artifact sandbox.
+// On GitHub Pages it's undefined — this shim backs it with localStorage so
+// the init promise chain (loadAllTime → loadStreak → loadPlayer) always resolves.
+// ─────────────────────────────────────────────────────────────────
+if(!window.storage || typeof window.storage.get !== 'function'){
+  window.storage = {
+    get: async function(key){
+      try{
+        const val = localStorage.getItem('focus_storage_' + key);
+        return val !== null ? { key, value: val } : null;
+      } catch(e){ return null; }
+    },
+    set: async function(key, value){
+      try{
+        localStorage.setItem('focus_storage_' + key, value);
+        return { key, value };
+      } catch(e){ return null; }
+    },
+    delete: async function(key){
+      try{
+        localStorage.removeItem('focus_storage_' + key);
+        return { key, deleted: true };
+      } catch(e){ return null; }
+    },
+    list: async function(prefix){
+      try{
+        const keys = Object.keys(localStorage)
+          .filter(k => k.startsWith('focus_storage_' + (prefix||'')))
+          .map(k => k.replace('focus_storage_',''));
+        return { keys };
+      } catch(e){ return { keys:[] }; }
+    }
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SUPABASE — Change 15: init + room/leaderboard functions
+// ─────────────────────────────────────────────────────────────────
+const SUPABASE_URL  = 'https://rqyffdowkxljaoouvfhb.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxeWZmZG93a3hsamFvb3V2ZmhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzIyMTEsImV4cCI6MjA5NjMwODIxMX0.e-QGXrhRNys8i7CeOjQGTFCxix1YQNWGKFncTkGqmuo';
+let _sb = null;
+
+// getSB() — returns Supabase client or null if SDK not loaded yet
+function getSB(){
+  if(_sb) return _sb;
+  try{
+    if(window.supabase && window.supabase.createClient){
+      _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    }
+  } catch(e){}
+  return _sb;
+}
+
+// getSBAsync() — waits up to 3s for deferred Supabase SDK to load
+async function getSBAsync(){
+  if(getSB()) return _sb;
+  for(let i=0; i<30; i++){
+    await new Promise(r => setTimeout(r, 100));
+    if(getSB()) return _sb;
+  }
+  console.warn('FOCUS: Supabase SDK did not load in time');
+  return null;
+}
+
+// ── Room functions ────────────────────────────────────────────────
+// Columns expected in Supabase `rooms` table:
+//   id (int8, PK), code (text, unique), target (int8), diff (text),
+//   setter_name (text), setter_id (text), entries (jsonb, default '[]'),
+//   created_at (timestamptz, default now())
+// RLS: enable anon SELECT, INSERT, UPDATE on rooms table.
+
+async function createRoom(target, diff, setter, setterId){
+  const sb = await getSBAsync();
+  if(!sb){ console.error('FOCUS: Supabase client not initialised'); return null; }
+
+  const code = String(Math.floor(1000 + Math.random() * 9000));
+  const payload = {
+    code,
+    target,
+    diff,
+    setter_name: setter,
+    setter_id:   setterId,
+    entries:     [],
+    created_at:  new Date().toISOString()
+  };
+
+  const { data, error } = await sb.from('rooms').insert(payload).select().single();
+  if(error){
+    console.error('FOCUS createRoom error:', JSON.stringify(error));
+    return null;
+  }
+  return data;
+}
+
+async function joinRoom(code){
+  const sb = await getSBAsync();
+  if(!sb){ console.error('FOCUS: Supabase client not initialised'); return null; }
+
+  const { data, error } = await sb
+    .from('rooms')
+    .select('*')
+    .eq('code', code)
+    .maybeSingle(); // maybeSingle() returns null instead of error when 0 rows
+
+  if(error){ console.error('FOCUS joinRoom error:', JSON.stringify(error)); return null; }
+  if(!data){ console.warn('FOCUS joinRoom: no room with code', code); return null; }
+
+  // Check expiry (24h)
+  const age = Date.now() - new Date(data.created_at).getTime();
+  if(age > 86400000){ console.warn('FOCUS joinRoom: room expired'); return null; }
+
+  return data;
+}
+
+function subscribeToRoom(code, onUpdate){
+  const sb = await getSBAsync(); if(!sb) return null;
+  return sb.channel('room:' + code)
+    .on('postgres_changes', {
+      event:'UPDATE', schema:'public', table:'rooms', filter:'code=eq.'+code
+    }, payload => onUpdate(payload.new))
+    .subscribe();
+}
+
+async function submitRoomScore(code, playerName, score){
+  const sb = await getSBAsync(); if(!sb) return;
+  try {
+    // Read current entries, upsert this player's score, write back
+    const { data, error } = await sb.from('rooms').select('entries').eq('code', code).maybeSingle();
+    if(error){ console.error('FOCUS submitRoomScore read error:', error); return; }
+    const entries = Array.isArray(data?.entries) ? [...data.entries] : [];
+    const idx = entries.findIndex(e => e.name === playerName);
+    if(idx >= 0){
+      if(score > entries[idx].score) entries[idx] = { name: playerName, score };
+    } else {
+      entries.push({ name: playerName, score });
+    }
+    entries.sort((a,b) => b.score - a.score);
+    const { error: we } = await sb.from('rooms').update({ entries }).eq('code', code);
+    if(we) console.error('FOCUS submitRoomScore write error:', we);
+  } catch(e){ console.error('FOCUS submitRoomScore exception:', e); }
+}
+
+// ── Global leaderboard functions ──────────────────────────────────
+async function submitRunToLeaderboard(run){
+  const sb = await getSBAsync(); if(!sb) return;
+  if(!PLAYER || !PLAYER.name || PLAYER.name === 'Player') return;
+  try {
+    // Upsert: keep the best score per player per difficulty
+    const { data: existing } = await sb.from('leaderboard')
+      .select('id, score')
+      .eq('player_id', PLAYER.id)
+      .eq('diff', run.diff)
+      .single();
+    if(existing){
+      if(run.score > existing.score){
+        await sb.from('leaderboard').update({
+          score: run.score, acc: run.acc, combo: run.combo,
+          speed: run.speed, perfects: run.perfects, goods: run.goods,
+          played_at: new Date().toISOString(), player_name: PLAYER.name
+        }).eq('id', existing.id);
+      }
+    } else {
+      await sb.from('leaderboard').insert({
+        player_id: PLAYER.id, player_name: PLAYER.name,
+        score: run.score, acc: run.acc, combo: run.combo,
+        speed: run.speed, diff: run.diff,
+        perfects: run.perfects, goods: run.goods,
+        played_at: new Date().toISOString()
+      });
+    }
+  } catch(e){ console.warn('leaderboard submit error:', e); }
+}
+
+async function fetchGlobalLeaderboard(){
+  const sb = await getSBAsync();
+  const el = document.getElementById('gbRows');
+  if(!el) return;
+  el.innerHTML = '<div class="gb-empty">LOADING...</div>';
+
+  if(!sb){
+    el.innerHTML = '<div class="gb-empty">COULD NOT CONNECT</div>';
+    return;
+  }
+
+  try {
+    const diff = document.getElementById('gbDiffFilter')?.value || 'all';
+    let query = sb.from('leaderboard').select('*').order('score', {ascending:false}).limit(100);
+    if(diff !== 'all') query = query.eq('diff', diff);
+    const { data, error } = await query;
+    if(error || !data){ el.innerHTML = '<div class="gb-empty">ERROR LOADING</div>'; return; }
+    if(!data.length){ el.innerHTML = '<div class="gb-empty">NO ENTRIES YET — BE FIRST!</div>'; return; }
+
+    const medals = ['gold','silver','bronze'];
+    el.innerHTML = data.map((row, i) => {
+      const isYou = PLAYER && row.player_id === PLAYER.id;
+      const rankCls = medals[i] || '';
+      return `<div class="gb-row${isYou?' gb-you':''}">
+        <div class="gb-rank ${rankCls}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+        <div class="gb-name">${row.player_name || 'UNKNOWN'}${isYou?' ◀':''}</div>
+        <div class="gb-score">${row.score.toLocaleString()}</div>
+        <div class="gb-diff">${(row.diff||'').toUpperCase()}</div>
+      </div>`;
+    }).join('');
+
+    // Show "your best" card if not in top list
+    const youEl = document.getElementById('gbYouRow');
+    const youCard = document.getElementById('gbYouCard');
+    if(PLAYER && youEl && youCard){
+      const myEntry = data.find(r => r.player_id === PLAYER.id);
+      const myRank  = myEntry ? data.indexOf(myEntry) + 1 : null;
+      if(myEntry && myRank > 10){
+        youEl.style.display = 'block';
+        youCard.innerHTML = `<div class="gb-row gb-you">
+          <div class="gb-rank">#${myRank}</div>
+          <div class="gb-name">${myEntry.player_name}</div>
+          <div class="gb-score">${myEntry.score.toLocaleString()}</div>
+          <div class="gb-diff">${(myEntry.diff||'').toUpperCase()}</div>
+        </div>`;
+      } else { youEl.style.display = 'none'; }
+    }
+  } catch(e){
+    el.innerHTML = '<div class="gb-empty">ERROR LOADING</div>';
+  }
+}
+
+// ── showGlobalBoard helper ────────────────────────────────────────
+function showGlobalBoard(){
+  showScreen('globalBoard');
+  fetchGlobalLeaderboard();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// AUDIO
+// ─────────────────────────────────────────────────────────────────
+const AC = new (window.AudioContext||window.webkitAudioContext)();
+let soundEnabled = true;
+
+// ── MECHANICAL SOUND ENGINE ───────────────────────────────────────
+// Heavy rotating wheel click + hook thud feel
+
+function _noise(dur){
+  // Generate a white noise buffer
+  const buf = AC.createBuffer(1, AC.sampleRate * dur, AC.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+  return buf;
+}
+
+function _thud(freq, vol, pitchDrop, dur){
+  // Heavy low thud — the "hook locks in" feeling
+  if(!soundEnabled) return;
+  const now = AC.currentTime;
+  const o = AC.createOscillator(), g = AC.createGain();
+  const dist = AC.createWaveShaper();
+  // Slight distortion for weight
+  const curve = new Float32Array(256);
+  for(let i=0;i<256;i++){ const x=i*2/256-1; curve[i]=x*(3+8)/(1+8*Math.abs(x)); }
+  dist.curve = curve;
+  o.type = 'sine';
+  o.frequency.setValueAtTime(freq, now);
+  o.frequency.exponentialRampToValueAtTime(freq * pitchDrop, now + dur * 0.6);
+  g.gain.setValueAtTime(vol, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+  o.connect(dist); dist.connect(g); g.connect(AC.destination);
+  o.start(now); o.stop(now + dur + 0.01);
+}
+
+function _click(vol, tone, dur){
+  // Sharp mechanical click — ratchet/wheel tooth snapping
+  if(!soundEnabled) return;
+  const now = AC.currentTime;
+  // Transient noise burst
+  const src = AC.createBufferSource(), ng = AC.createGain();
+  const hpf = AC.createBiquadFilter(); hpf.type='highpass'; hpf.frequency.value=1800;
+  const lpf = AC.createBiquadFilter(); lpf.type='lowpass';  lpf.frequency.value=8000;
+  src.buffer = _noise(0.025);
+  ng.gain.setValueAtTime(vol * 0.9, now);
+  ng.gain.exponentialRampToValueAtTime(0.001, now + 0.022);
+  src.connect(hpf); hpf.connect(lpf); lpf.connect(ng); ng.connect(AC.destination);
+  src.start(now);
+  // Tonal body — metallic ring
+  const o = AC.createOscillator(), og = AC.createGain();
+  o.type = 'triangle'; o.frequency.value = tone;
+  og.gain.setValueAtTime(vol * 0.4, now);
+  og.gain.exponentialRampToValueAtTime(0.001, now + dur);
+  o.connect(og); og.connect(AC.destination);
+  o.start(now); o.stop(now + dur + 0.01);
+}
+
+function _whoosh(vol, dur){
+  // Spinning wheel whoosh — rising noise sweep
+  if(!soundEnabled) return;
+  const now = AC.currentTime;
+  const src = AC.createBufferSource(), g = AC.createGain();
+  const bpf = AC.createBiquadFilter(); bpf.type='bandpass';
+  bpf.frequency.setValueAtTime(400, now);
+  bpf.frequency.exponentialRampToValueAtTime(2200, now + dur * 0.6);
+  bpf.frequency.exponentialRampToValueAtTime(600, now + dur);
+  bpf.Q.value = 3;
+  src.buffer = _noise(dur + 0.05);
+  g.gain.setValueAtTime(0, now);
+  g.gain.linearRampToValueAtTime(vol, now + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+  src.connect(bpf); bpf.connect(g); g.connect(AC.destination);
+  src.start(now);
+}
+
+// ── TAP SOUNDS ───────────────────────────────────────────────────
+
+const playPerfect = (combo=0)=>{
+  const pitch = 1 + Math.min(combo, MAX_COMBO) * 0.06; // pitch rises with combo
+  _thud(120 * pitch, 0.55, 0.18, 0.22);
+  _click(0.7, 2400 * pitch, 0.18);
+  setTimeout(()=> _click(0.25, 1800 * pitch, 0.1), 35);
+};
+
+const playGood = (combo=0)=>{
+  const pitch = 1 + Math.min(combo, MAX_COMBO) * 0.03;
+  _thud(90 * pitch, 0.35, 0.25, 0.16);
+  _click(0.45, 1600 * pitch, 0.12);
+};
+
+const playMiss = ()=>{
+  // Hook scrapes/misses — harsh rattle + dull thud
+  if(!soundEnabled) return;
+  const now = AC.currentTime;
+  // Scrape noise
+  const src = AC.createBufferSource(), g = AC.createGain();
+  const bpf = AC.createBiquadFilter(); bpf.type='bandpass'; bpf.frequency.value=320; bpf.Q.value=1.5;
+  src.buffer = _noise(0.18);
+  g.gain.setValueAtTime(0.38, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+  src.connect(bpf); bpf.connect(g); g.connect(AC.destination);
+  src.start(now);
+  // Dull thud
+  _thud(55, 0.28, 0.6, 0.14);
+};
+
+const playGameOver = ()=>{
+  // Wheel grinds to a halt — decelerating clicks + deep crash
+  if(!soundEnabled) return;
+  _thud(80, 0.45, 0.3, 0.35);
+  setTimeout(()=>{ _click(0.35, 900, 0.2); _thud(50, 0.3, 0.5, 0.3); }, 120);
+  setTimeout(()=>{ _click(0.2,  600, 0.25); _thud(38, 0.25, 0.6, 0.4); }, 280);
+  // Final settling whoosh
+  setTimeout(()=> _whoosh(0.12, 0.4), 380);
+};
+
+const playCountdown = ()=>{
+  // Single heavy tick
+  _click(0.5, 1200, 0.06);
+  _thud(70, 0.2, 0.4, 0.06);
+};
+
+const playGo = ()=>{
+  // Wheel RELEASES — whoosh + sharp double-click
+  _whoosh(0.3, 0.28);
+  _click(0.6, 2000, 0.14);
+  setTimeout(()=> _click(0.45, 2600, 0.1), 55);
+};
+
+const playUnlock = ()=>{
+  // Ratchet sequence — ascending clicks
+  [0, 70, 150].forEach((t, i) => {
+    setTimeout(()=>{
+      _click(0.4 + i*0.1, 1400 + i*400, 0.14 + i*0.04);
+      _thud(90 + i*20, 0.2, 0.35, 0.1);
+    }, t);
+  });
+};
+
+function unlockAudio(){ if(AC.state==='suspended') AC.resume(); }
+
+// ── HAPTIC FEEDBACK ──────────────────────────────────────────────
+function haptic(type){
+  if(!navigator.vibrate) return;
+  if(type==='perfect') navigator.vibrate(18);
+  else if(type==='good') navigator.vibrate(8);
+  else if(type==='miss') navigator.vibrate([30,20,60]);
+  else if(type==='gameover') navigator.vibrate([60,30,60,30,120]);
+  else if(type==='burst') navigator.vibrate([10,10,20]);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// MUSIC ENGINE
+// Ambient home music: slow, atmospheric arpeggios
+// Boss/gameplay music: driving, intense, rhythmic pulse
+// ─────────────────────────────────────────────────────────────────
+let musicNodes = [];
+let musicInterval = null;
+let currentMusic = null; // 'home' | 'game' | null
+let musicMasterGain = null;
+
+function stopMusic(fadeMs=600){
+  if(musicInterval){ clearTimeout(musicInterval); clearInterval(musicInterval); musicInterval=null; }
+  if(musicMasterGain){
+    const g = musicMasterGain;
+    g.gain.setValueAtTime(g.gain.value, AC.currentTime);
+    g.gain.linearRampToValueAtTime(0, AC.currentTime + fadeMs/1000);
+    setTimeout(()=>{ try{ g.disconnect(); }catch(e){} musicMasterGain=null; }, fadeMs+100);
+  }
+  musicNodes.forEach(n=>{ try{ n.stop && n.stop(); n.disconnect && n.disconnect(); }catch(e){} });
+  musicNodes=[];
+  currentMusic=null;
+}
+
+function startHomeMusic(){
+  if(!soundEnabled) return;
+  if(currentMusic==='home') return;
+  stopMusic(400);
+  setTimeout(()=>{ if(currentMusic) return; _buildHomeMusic(); }, 450);
+}
+
+function startGameMusic(){
+  if(!soundEnabled) return;
+  if(currentMusic==='game') return;
+  stopMusic(300);
+  setTimeout(()=>{ if(currentMusic==='game') return; _buildGameMusic(); }, 350);
+}
+
+// ── MUSIC HELPERS ────────────────────────────────────────────────
+function chipNote(freq, dur, vol, type, dest, when){
+  // A single chiptune note: square/pulse wave with fast attack, short decay
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'square';
+  o.frequency.value = freq;
+  g.gain.setValueAtTime(0, when);
+  g.gain.linearRampToValueAtTime(vol, when + 0.008);
+  g.gain.setValueAtTime(vol * 0.7, when + dur * 0.5);
+  g.gain.linearRampToValueAtTime(0.001, when + dur - 0.01);
+  o.connect(g); g.connect(dest);
+  o.start(when); o.stop(when + dur);
+  musicNodes.push(o, g);
+}
+
+function chipDrum(type, dest, when){
+  // Kick or snare via noise/oscillator
+  if(type === 'kick'){
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(150, when);
+    o.frequency.exponentialRampToValueAtTime(40, when + 0.1);
+    g.gain.setValueAtTime(0.5, when);
+    g.gain.exponentialRampToValueAtTime(0.001, when + 0.15);
+    o.connect(g); g.connect(dest);
+    o.start(when); o.stop(when + 0.16);
+    musicNodes.push(o, g);
+  } else {
+    const buf = AC.createBuffer(1, AC.sampleRate * 0.08, AC.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(d.length*0.3));
+    const src = AC.createBufferSource(), g = AC.createGain();
+    src.buffer = buf; g.gain.value = 0.18;
+    src.connect(g); g.connect(dest);
+    src.start(when); musicNodes.push(src, g);
+  }
+}
+
+// ── HOME: Mario-style overworld — bright, looping, uplifting ─────
+function _buildHomeMusic(){
+  currentMusic = 'home';
+  if(AC.state==='suspended') AC.resume();
+
+  const master = AC.createGain();
+  master.gain.setValueAtTime(0, AC.currentTime);
+  master.gain.linearRampToValueAtTime(0.2, AC.currentTime + 0.8);
+  master.connect(AC.destination);
+  musicMasterGain = master;
+
+  // BPM 160, step = 1 16th note
+  const BPM = 160, STEP = (60/BPM)/4;
+
+  // Mario Overworld main melody — note frequencies (0 = rest)
+  // E5 E5 - E5 - C5 E5 - G5 --- G4 ---
+  const E4=329.63,G4=392.00,A4=440.00,B4=493.88;
+  const C5=523.25,D5=587.33,E5=659.25,F5=698.46,G5=783.99,A5=880.00,B5=987.77;
+  const Bb4=466.16, Fs5=739.99, Ds5=622.25;
+
+  // Melody: 32-step loop (approximate Mario overworld feel)
+  const melody = [
+    E5,0,E5,0,0,E5,0,0,C5,E5,0,G5,0,0,0,G4,
+    0,C5,0,0,G4,0,0,E4,0,A4,0,B4,0,Bb4,A4,0
+  ];
+  // Bass/harmony line
+  const bass = [
+    C4=130.81,0,G3=196.00,0,C4,0,G3,0,C4,0,G3,0,A3=220.00,0,E3=164.81,0,
+    F3=174.61,0,C4,0,F3,0,C4,0,G3,0,D4=293.66,0,G3,0,D4,0
+  ];
+  // Chord stabs (every 4 steps)
+  const chords = [C5,C5,A4,A4,F5,F5,G5,G5];
+
+  let step = 0, chordStep = 0;
+  const START = AC.currentTime + 0.05;
+
+  function scheduleMeasure(){
+    if(currentMusic !== 'home' || !soundEnabled) return;
+    const base = START + step * STEP;
+
+    for(let i = 0; i < 32; i++){
+      const t = base + i * STEP;
+      // Melody
+      if(melody[i]) chipNote(melody[i], STEP*0.82, 0.14, 'square', master, t);
+      // Bass
+      if(bass[i])   chipNote(bass[i],   STEP*0.75, 0.09, 'triangle', master, t);
+      // Chord stabs every 4 steps
+      if(i % 4 === 0 && chords[i/4]){
+        chipNote(chords[Math.floor(i/4) % chords.length], STEP*0.4, 0.05, 'square', master, t);
+      }
+      // Drums
+      if(i % 8 === 0) chipDrum('kick', master, t);
+      if(i % 8 === 4) chipDrum('snare', master, t);
+    }
+    step += 32;
+    // Schedule next measure just before it plays
+    const nextIn = (32 * STEP - 0.1) * 1000;
+    musicInterval = setTimeout(scheduleMeasure, nextIn);
+
+    if(musicNodes.length > 300) musicNodes.splice(0, 100);
+  }
+
+  scheduleMeasure();
+}
+
+// ── GAME: Mario underground — driving, edgy chiptune ─────────────
+function _buildGameMusic(){
+  currentMusic = 'game';
+  if(AC.state==='suspended') AC.resume();
+
+  const master = AC.createGain();
+  master.gain.setValueAtTime(0, AC.currentTime);
+  master.gain.linearRampToValueAtTime(0.22, AC.currentTime + 0.4);
+  master.connect(AC.destination);
+  musicMasterGain = master;
+
+  // Compressor
+  const comp = AC.createDynamicsCompressor();
+  comp.threshold.value=-16; comp.knee.value=6; comp.ratio.value=5;
+  comp.attack.value=0.002; comp.release.value=0.1;
+  comp.connect(master); musicNodes.push(comp);
+
+  const BPM = 200, STEP = (60/BPM)/4;
+
+  // Mario underground melody (C minor feel, tense)
+  const C4=261.63,D4=293.66,Eb4=311.13,F4=349.23,G4=392.00,Ab4=415.30,Bb4=466.16;
+  const C5=523.25,D5=587.33,Eb5=622.25,F5=698.46,G5=783.99;
+
+  const melody = [
+    C5,0,C5,C5,0,C5,0,Eb5,
+    0,D5,0,Db5=554.37,0,C5,0,0,
+    Bb4,0,0,Bb4,0,Ab4,0,0,
+    G4,0,0,0,0,0,0,0
+  ];
+  const bass = [
+    C4,0,G4,0,C4,0,G4,0,
+    C4,0,F4,0,C4,0,G4,0,
+    Bb4,0,F4,0,Bb4,0,Ab4,0,
+    G4,0,D4,0,G4,0,D4,0
+  ];
+
+  let step = 0;
+  const START = AC.currentTime + 0.05;
+
+  function scheduleMeasure(){
+    if(currentMusic !== 'game' || !soundEnabled) return;
+    const base = START + step * STEP;
+
+    for(let i=0;i<32;i++){
+      const t = base + i * STEP;
+      if(melody[i]) chipNote(melody[i], STEP*0.75, 0.13, 'square', comp, t);
+      if(bass[i])   chipNote(bass[i],   STEP*0.65, 0.10, 'sawtooth', comp, t);
+      // Pulse arp on offbeats for intensity
+      if(i % 4 === 2) chipNote(C5 * (i%8===2?1:0.5), STEP*0.35, 0.05, 'square', comp, t);
+      // Drums
+      if(i % 4 === 0) chipDrum('kick', comp, t);
+      if(i % 8 === 4) chipDrum('snare', comp, t);
+      if(i % 2 === 1) chipDrum('snare', comp, t); // hi-hat feel via light snare
+    }
+    step += 32;
+    const nextIn = (32 * STEP - 0.1) * 1000;
+    musicInterval = setTimeout(scheduleMeasure, nextIn);
+
+    if(musicNodes.length > 300) musicNodes.splice(0, 100);
+  }
+
+  scheduleMeasure();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ALL-TIME PERSISTENT DATA (window.storage)
+// ─────────────────────────────────────────────────────────────────
+const AT_KEY = 'focus-alltime-v2';
+
+// Default all-time object
+const AT_DEFAULT = {
+  bestScore:0, bestCombo:0, bestAcc:0, bestSpeed:0,
+  totalRuns:0, totalPerfects:0, totalGoods:0, totalMisses:0,
+  totalXp:0,    // cumulative XP across all runs
+  earnedIds:[], // achievement IDs earned across all sessions
+  history:[]   // top 20 runs ever
+};
+
+let AT = {...AT_DEFAULT};
+
+async function loadAllTime(){
+  try {
+    const res = await window.storage.get(AT_KEY);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      AT = {...AT_DEFAULT, ...parsed};
+      // Restore earned achievements from all-time data
+      if(AT.earnedIds && AT.earnedIds.length){
+        AT.earnedIds.forEach(id => earned.add(id));
+      }
+    }
+  } catch(e){
+    // storage unavailable or key not found — start fresh
+    AT = {...AT_DEFAULT};
+  }
+}
+
+async function saveAllTime(){
+  try {
+    AT.earnedIds = [...earned];
+    await window.storage.set(AT_KEY, JSON.stringify(AT));
+  } catch(e){ /* silent fail */ }
+}
+
+async function resetAllTime(){
+  if(!confirm('Reset all all-time records and unlocks? This cannot be undone.')) return;
+  try { await window.storage.delete(AT_KEY); } catch(e){}
+  AT = {...AT_DEFAULT};
+  earned.clear();
+  alert('All-time data cleared.');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SESSION STATS  (in-memory)
+// ─────────────────────────────────────────────────────────────────
+const S = {
+  bestScore:0, bestCombo:0, bestAcc:0, bestSpeed:0,
+  totalRuns:0, totalPerfects:0, totalGoods:0, totalMisses:0,
+  history:[]
+};
+
+function recordRun(run){
+  // Calculate XP for this run
+  run.xp = calcRunXp(run);
+
+  // session
+  const isNewBest = run.score > S.bestScore;
+  S.bestScore  = Math.max(S.bestScore,  run.score);
+  S.bestCombo  = Math.max(S.bestCombo,  run.combo);
+  S.bestAcc    = Math.max(S.bestAcc,    run.acc);
+  S.bestSpeed  = Math.max(S.bestSpeed,  run.speed);
+  S.totalRuns++;
+  S.totalPerfects += run.perfects;
+  S.totalGoods    += run.goods;
+  S.totalMisses   += run.misses;
+  S.history.unshift(run);
+  if(S.history.length>20) S.history.length=20;
+
+  // all-time
+  const isATNewBest = run.score > AT.bestScore;
+  AT.bestScore  = Math.max(AT.bestScore,  run.score);
+  AT.bestCombo  = Math.max(AT.bestCombo,  run.combo);
+  AT.bestAcc    = Math.max(AT.bestAcc,    run.acc);
+  AT.bestSpeed  = Math.max(AT.bestSpeed,  run.speed);
+  AT.totalRuns++;
+  AT.totalPerfects += run.perfects;
+  AT.totalGoods    += run.goods;
+  AT.totalMisses   += run.misses;
+  AT.totalXp = (AT.totalXp || 0) + run.xp; // accumulate XP
+  AT.bestTrapPerfects = Math.max(AT.bestTrapPerfects||0, run.trapPerfects||0);
+  AT.bestComboResets  = Math.max(AT.bestComboResets||0,  run.maxComboResets||0);
+  AT.history.unshift(run);
+  AT.history.sort((a,b)=>b.score-a.score);
+  if(AT.history.length>20) AT.history.length=20;
+
+  saveAllTime();
+  return isNewBest || isATNewBest;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// UNLOCKS / ACHIEVEMENTS
+// Rewards: themes, bg modes, difficulties unlock via achievements
+// ─────────────────────────────────────────────────────────────────
+
+// Things that start locked
+const LOCKED_THEMES = ['gold','plasma','ice'];
+const LOCKED_BG = ['pulsar'];
+
+const ACHIEVEMENTS = [
+  { id:'first_blood',  name:'FIRST RUN',      desc:'Complete your first run',
+    icon:'\u25b6', check:()=> AT.totalRuns >= 1,
+    progress:()=>({ val: Math.min(AT.totalRuns,1), max:1 }) },
+
+  { id:'centurion',    name:'CENTURION',       desc:'Score 3,000 in one run',
+    icon:'💯', check:(r)=> r && r.score >= 3000,
+    progress:()=>({ val: Math.min(AT.bestScore||0, 3000), max:3000 }),
+    reward: { type:'theme', id:'gold', label:'GOLD theme' } },
+
+  { id:'sharpshooter', name:'SHARPSHOOTER',    desc:'92% accuracy in a run (min 15 taps)',
+    icon:'🎯', check:(r)=> r && r.acc >= 92 && (r.perfects+r.goods+r.misses) >= 15,
+    progress:()=>({ val: Math.min(AT.bestAcc||0,92), max:92 }),
+    reward: { type:'theme', id:'ice', label:'ICE theme' } },
+
+  { id:'combo5',       name:'COMBO ARTIST',    desc:'Hit a x8 combo',
+    icon:'🔥', check:(r)=> r && r.combo >= 8,
+    progress:()=>({ val: Math.min(AT.bestCombo||0,8), max:8 }) },
+
+  { id:'combo10',      name:'UNSTOPPABLE',     desc:'Reach x10 combo 3 times in one run',
+    icon:'\u26a1', check:(r)=> r && (r.maxComboResets||0) >= 3,
+    progress:()=>({ val: Math.min(AT.bestComboResets||0,3), max:3 }),
+    reward: { type:'theme', id:'plasma', label:'PLASMA theme' } },
+
+  { id:'speed3',       name:'SPEED DEMON',     desc:'Reach x4.0 speed in a run',
+    icon:'🚀', check:(r)=> r && r.speed >= 4.0,
+    progress:()=>({ val: Math.min((AT.bestSpeed||0),4.0).toFixed(1), max:4.0 }),
+    reward: { type:'bg', id:'pulsar', label:'PULSAR background' } },
+
+  { id:'perfectionist',name:'PERFECTIONIST',   desc:'Get 20 perfects in one run',
+    icon:'\u2726', check:(r)=> r && r.perfects >= 20,
+    progress:()=>({ val: Math.min(AT.totalPerfects||0,20), max:20 }) },
+
+  { id:'survivor',     name:'IRON WILL',       desc:'Play 5 runs',
+    icon:'🛡', check:()=> AT.totalRuns >= 5,
+    progress:()=>({ val: Math.min(AT.totalRuns,5), max:5 }) },
+
+  { id:'veteran',      name:'VETERAN',         desc:'Play 20 runs total',
+    icon:'\u2b50', check:()=> AT.totalRuns >= 20,
+    progress:()=>({ val: Math.min(AT.totalRuns,20), max:20 }) },
+
+  { id:'grandmaster',  name:'GRANDMASTER',     desc:'Score 15,000 in one run',
+    icon:'👑', check:(r)=> r && r.score >= 15000,
+    progress:()=>({ val: Math.min(AT.bestScore||0,15000), max:15000 }),
+    reward: { type:'theme', id:'plasma', label:'PLASMA theme (elite)' } },
+
+  { id:'neatfreak',    name:'CLEAN HANDS',     desc:'Finish a run with zero misses (min 20 taps)',
+    icon:'🌙', check:(r)=> r && r.misses === 0 && (r.perfects+r.goods) >= 20,
+    progress:()=>({ val: AT.totalRuns > 0 ? 'PLAY — MISS NOTHING' : 0, max:null }) },
+
+  { id:'speedrun',     name:'SPEEDRUNNER',     desc:'Score 2,000 pts at x2.5+ speed',
+    icon:'💨', check:(r)=> r && r.score >= 2000 && r.speed >= 2.5,
+    progress:()=>({ val: Math.min(AT.bestScore||0,2000), max:2000 }) },
+
+  { id:'legend',       name:'LEGEND',          desc:'Play 50 runs total',
+    icon:'🌟', check:()=> AT.totalRuns >= 50,
+    progress:()=>({ val: Math.min(AT.totalRuns,50), max:50 }),
+    reward: { type:'theme', id:'gold', label:'GOLD theme (legend)' } },
+
+  { id:'deathless',    name:'UNTOUCHABLE',     desc:'Hit x10 combo without a miss in one run',
+    icon:'💎', check:(r)=> r && r.combo >= 10 && r.misses === 0,
+    progress:()=>({ val: 0, max:null }) },
+
+  { id:'survivor_trap',name:'TRAP MASTER',     desc:'Hit 5 perfects while surviving a speed trap',
+    icon:'\u26a0\ufe0f', check:(r)=> r && (r.trapPerfects||0) >= 5,
+    progress:()=>({ val: Math.min(AT.bestTrapPerfects||0,5), max:5 }) },
+];
+
+const earned = new Set();
+
+function checkAchievements(run){
+  const newlyEarned = [];
+  for(const a of ACHIEVEMENTS){
+    if(earned.has(a.id)) continue;
+    if(a.check(run)){
+      earned.add(a.id);
+      newlyEarned.push(a);
+    }
+  }
+  return newlyEarned;
+}
+
+function isThemeUnlocked(id){
+  if(!LOCKED_THEMES.includes(id)) return true;
+  // check if any achievement that unlocks this theme is earned
+  return ACHIEVEMENTS.some(a => a.reward && a.reward.type==='theme' && a.reward.id===id && earned.has(a.id));
+}
+function isBgUnlocked(id){
+  if(!LOCKED_BG.includes(id)) return true;
+  return ACHIEVEMENTS.some(a => a.reward && a.reward.type==='bg' && a.reward.id===id && earned.has(a.id));
+}
+function getUnlockHintForTheme(id){
+  const a = ACHIEVEMENTS.find(ac => ac.reward && ac.reward.type==='theme' && ac.reward.id===id);
+  return a ? `UNLOCK: ${a.name} — ${a.desc}` : 'LOCKED';
+}
+function getUnlockHintForBg(id){
+  const a = ACHIEVEMENTS.find(ac => ac.reward && ac.reward.type==='bg' && ac.reward.id===id);
+  return a ? `UNLOCK: ${a.name} — ${a.desc}` : 'LOCKED';
+}
+
+// ─────────────────────────────────────────────────────────────────
+// CONFIG / PREFS
+// ─────────────────────────────────────────────────────────────────
+const THEMES=[
+  {id:'purple', label:'PURPLE', accent:'#c8c8ff'},
+  {id:'yellow', label:'YELLOW', accent:'#e8ff47'},
+  {id:'neon',   label:'NEON',   accent:'#00ffcc'},
+  {id:'crimson',label:'CRIMSON',accent:'#ff3355'},
+  {id:'white',  label:'WHITE',  accent:'#111111'},
+  {id:'gold',   label:'GOLD',   accent:'#ffd700'},
+  {id:'plasma', label:'PLASMA', accent:'#cc44ff'},
+  {id:'ice',    label:'ICE',    accent:'#60d0ff'},
+];
+const DIFFS=[
+  {id:'easy',   label:'EASY',   lives:7,   dots:7},
+  {id:'normal', label:'NORMAL', lives:5,   dots:5},
+  {id:'hard',   label:'HARD',   lives:3,   dots:3},
+  {id:'zen',    label:'ZEN',    lives:999, dots:0, desc:'no game over'},
+  {id:'blitz',  label:'BLITZ',  lives:1,   dots:1, desc:'1 life · starts ×2'},
+  {id:'ghost',  label:'GHOST',  lives:5,   dots:5, desc:'no miss feedback'},
+  {id:'sudden', label:'SUDDEN', lives:999, dots:0, desc:'any miss = instant death'},
+];
+const BG_MODES=[
+  {id:'orbits',label:'ORBITS'},
+  {id:'waves', label:'WAVES'},
+  {id:'pulsar',label:'PULSAR'},
+  {id:'off',   label:'OFF'},
+];
+
+const CX=50,CY=50,R=38,CIRC=2*Math.PI*R;
+const BASE_MS=2100, SPEED_PERF=0.07, SPEED_GOOD=0.03; // gentler speed ramp-up
+// Rebalanced scoring: base pts lower, perfect bonus tighter, combo harder to build
+const BASE_PTS=10, PERF_BONUS=15, MAX_COMBO=10, MAX_SPEED=5.0;
+let PERF_HALF=0.065, GOOD_HALF=0.14;
+
+let prefs={theme:'purple',diff:'normal',bgMode:'orbits',startSpeed:1.0,wideWindow:true};
+const getDiff=()=>DIFFS.find(d=>d.id===prefs.diff);
+
+// ─────────────────────────────────────────────────────────────────
+// STAT TABS
+// ─────────────────────────────────────────────────────────────────
+let activeStatTab = 'alltime';
+function switchStatTab(tab){
+  activeStatTab = tab;
+  document.querySelectorAll('.stat-tab').forEach((el,i)=>{
+    const t = i===0 ? 'alltime' : 'session';
+    el.classList.toggle('active', t===tab);
+  });
+  document.querySelectorAll('.stat-panel').forEach(el=>{
+    el.classList.toggle('active', el.id===`panel-${tab}`);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────
+// LOCK HINT TOAST
+// ─────────────────────────────────────────────────────────────────
+let lockHintTimer = null;
+function showLockHint(msg){
+  const el = document.getElementById('lockHint');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(lockHintTimer);
+  lockHintTimer = setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SETTINGS UI
+// ─────────────────────────────────────────────────────────────────
+function buildSettings(){
+  document.getElementById('themeOpts').innerHTML=THEMES.map(t=>{
+    const unlocked = isThemeUnlocked(t.id);
+    const sel = prefs.theme===t.id;
+    const cls = `chip${sel?' sel':''}${!unlocked?' locked-click':''}`;
+    const onclick = unlocked
+      ? `setTheme('${t.id}')`
+      : `showLockHint('${getUnlockHintForTheme(t.id)}')`;
+    const lockIcon = unlocked ? '' : ' 🔒';
+    return `<div class="${cls}" onclick="${onclick}">
+      <span class="tdot" style="background:${t.accent};${t.id==='white'?'border:1px solid #bbb':''}"></span>${t.label}${lockIcon}
+    </div>`;
+  }).join('');
+
+  document.getElementById('diffOpts').innerHTML=DIFFS.map(d=>`
+    <div class="chip diff${prefs.diff===d.id?' sel':''}" onclick="setDiff('${d.id}')">
+      <span>${d.label}</span>
+      <div style="display:flex;gap:3px;margin-top:5px;min-height:8px;align-items:center">
+        ${(d.dots||0)>0?'<span style="width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block"></span>'.repeat(d.dots):'<span style="font-size:7px;letter-spacing:.12em;opacity:.6">'+(d.desc||'')+'</span>'}
+      </div>
+    </div>`).join('');
+
+  document.getElementById('bgOpts').innerHTML=BG_MODES.map(m=>{
+    const unlocked = isBgUnlocked(m.id);
+    const sel = prefs.bgMode===m.id;
+    const cls = `chip${sel?' sel':''}${!unlocked?' locked-click':''}`;
+    const onclick = unlocked
+      ? `setBgMode('${m.id}')`
+      : `showLockHint('${getUnlockHintForBg(m.id)}')`;
+    const lockIcon = unlocked ? '' : ' 🔒';
+    return `<div class="${cls}" onclick="${onclick}">${m.label}${lockIcon}</div>`;
+  }).join('');
+
+  const sl=document.getElementById('startSpeedSlider');
+  sl.value=Math.round(prefs.startSpeed*10);
+  updateSliderFill(sl);
+  document.getElementById('startSpeedVal').textContent=`×${prefs.startSpeed.toFixed(1)}`;
+  document.getElementById('soundToggle').classList.toggle('sel',soundEnabled);
+  document.getElementById('sizeToggle').classList.toggle('sel',prefs.wideWindow);
+}
+
+function updateSliderFill(el){
+  const pct=((+el.value - +el.min)/(+el.max - +el.min)*100).toFixed(1)+'%';
+  el.style.setProperty('--pct',pct);
+}
+function onStartSpeedChange(el){
+  updateSliderFill(el);
+  prefs.startSpeed=el.value/10;
+  document.getElementById('startSpeedVal').textContent=`×${prefs.startSpeed.toFixed(1)}`;
+}
+function setTheme(id){
+  if(!isThemeUnlocked(id)){ showLockHint(getUnlockHintForTheme(id)); return; }
+  prefs.theme=id;
+  document.body.setAttribute('data-theme',id==='purple'?'':id);
+  buildSettings(); updateHomePreview();
+}
+function setDiff(id){ prefs.diff=id; buildSettings(); updateHomePreview(); }
+function setBgMode(id){
+  if(!isBgUnlocked(id)){ showLockHint(getUnlockHintForBg(id)); return; }
+  prefs.bgMode=id; buildSettings();
+}
+function toggleSound(){
+  soundEnabled=!soundEnabled;
+  document.getElementById('soundToggle').classList.toggle('sel',soundEnabled);
+  if(!soundEnabled){ stopMusic(300); }
+  else {
+    const id=document.querySelector('.screen.active')?.id;
+    if(id==='home'||id==='settings'||id==='stats'||id==='unlocks') startHomeMusic();
+    else if(id==='game') startGameMusic();
+  }
+}
+function toggleWindow(){
+  prefs.wideWindow=!prefs.wideWindow;
+  document.getElementById('sizeToggle').classList.toggle('sel',prefs.wideWindow);
+  PERF_HALF=prefs.wideWindow?.085:.055;
+  GOOD_HALF=prefs.wideWindow?.17:.12;
+}
+function updateHomePreview(){
+  const d = getDiff();
+  const _infiniteDiff = !d.dots || d.dots === 0;
+  document.getElementById('homeLives').innerHTML = _infiniteDiff
+    ? `<span style="font-size:9px;letter-spacing:.3em;color:var(--accent)">${(d.desc||'∞ NO LIVES').toUpperCase()}</span>`
+    : Array(d.dots||d.lives).fill('<span class="hdot"></span>').join('');
+  const best = AT.bestScore > 0 ? `BEST  ${AT.bestScore.toLocaleString()}` : '';
+  document.getElementById('homeBestScore').textContent = best;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// STATS RENDER
+// ─────────────────────────────────────────────────────────────────
+function renderStats(){
+  // All-time panel
+  document.getElementById('atBestScore').textContent=
+    AT.bestScore>0 ? AT.bestScore.toLocaleString() : '—';
+  const atTaps = AT.totalPerfects+AT.totalGoods+AT.totalMisses;
+  const atAcc = atTaps>0 ? Math.round((AT.totalPerfects+AT.totalGoods)/atTaps*100) : 0;
+  document.getElementById('atStatGrid').innerHTML=`
+    <div class="stat-cell"><div class="stat-cell-val">${AT.bestCombo>0?AT.bestCombo+'×':'—'}</div><div class="stat-cell-key">BEST COMBO</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${AT.bestAcc>0?AT.bestAcc+'%':'—'}</div><div class="stat-cell-key">BEST ACC</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${AT.bestSpeed>0?AT.bestSpeed.toFixed(1)+'×':'—'}</div><div class="stat-cell-key">BEST SPEED</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${AT.totalRuns}</div><div class="stat-cell-key">TOTAL RUNS</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${atAcc>0?atAcc+'%':'—'}</div><div class="stat-cell-key">OVERALL ACC</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${AT.totalPerfects.toLocaleString()}</div><div class="stat-cell-key">PERFECTS</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${AT.totalMisses.toLocaleString()}</div><div class="stat-cell-key">MISSES</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${atTaps.toLocaleString()}</div><div class="stat-cell-key">TOTAL TAPS</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${STK.currentStreak>0?STK.currentStreak+'🔥':'—'}</div><div class="stat-cell-key">DAY STREAK</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${STK.longestStreak>0?STK.longestStreak+'🔥':'—'}</div><div class="stat-cell-key">BEST STREAK</div></div>
+  `;
+  if(!AT.history.length){
+    document.getElementById('atHistory').innerHTML=
+      '<div style="font-size:10px;color:var(--text-dim);letter-spacing:.2em;padding:10px 0">NO RUNS YET</div>';
+  } else {
+    document.getElementById('atHistory').innerHTML=AT.history.map((r,i)=>`
+      <div class="stat-run${i===0?' is-best':''}">
+        <div>
+          <span class="stat-run-score">${r.score.toLocaleString()}</span>
+          ${i===0?'<span class="new-best-badge" style="margin-left:6px">BEST</span>':''}
+        </div>
+        <div class="stat-run-meta">${r.diff.toUpperCase()} · ${r.acc}% · ×${r.combo}</div>
+      </div>`).join('');
+  }
+
+  // Session panel
+  document.getElementById('stBestScore').textContent=
+    S.bestScore>0 ? S.bestScore.toLocaleString() : '—';
+  const totalTaps=S.totalPerfects+S.totalGoods+S.totalMisses;
+  const overallAcc=totalTaps>0?Math.round((S.totalPerfects+S.totalGoods)/totalTaps*100):0;
+  document.getElementById('statGrid').innerHTML=`
+    <div class="stat-cell"><div class="stat-cell-val">${S.bestCombo>0?S.bestCombo+'×':'—'}</div><div class="stat-cell-key">BEST COMBO</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${S.bestAcc>0?S.bestAcc+'%':'—'}</div><div class="stat-cell-key">BEST ACC</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${S.bestSpeed>0?S.bestSpeed.toFixed(1)+'×':'—'}</div><div class="stat-cell-key">BEST SPEED</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${S.totalRuns}</div><div class="stat-cell-key">RUNS THIS SESSION</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${overallAcc>0?overallAcc+'%':'—'}</div><div class="stat-cell-key">SESSION ACC</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${S.totalPerfects.toLocaleString()}</div><div class="stat-cell-key">PERFECTS</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${S.totalMisses.toLocaleString()}</div><div class="stat-cell-key">MISSES</div></div>
+    <div class="stat-cell"><div class="stat-cell-val">${totalTaps.toLocaleString()}</div><div class="stat-cell-key">TOTAL TAPS</div></div>
+  `;
+  if(!S.history.length){
+    document.getElementById('statHistory').innerHTML=
+      '<div style="font-size:10px;color:var(--text-dim);letter-spacing:.2em;padding:10px 0">NO RUNS YET</div>';
+    return;
+  }
+  const best=Math.max(...S.history.map(r=>r.score));
+  document.getElementById('statHistory').innerHTML=S.history.map((r,i)=>`
+    <div class="stat-run${r.score===best&&i===S.history.findIndex(x=>x.score===best)?' is-best':''}">
+      <div>
+        <span class="stat-run-score">${r.score.toLocaleString()}</span>
+        ${r.score===best&&i===S.history.findIndex(x=>x.score===best)?'<span class="new-best-badge" style="margin-left:6px">BEST</span>':''}
+      </div>
+      <div class="stat-run-meta">${r.diff.toUpperCase()} · ${r.acc}% · ×${r.combo}</div>
+    </div>`).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// UNLOCKS RENDER
+// ─────────────────────────────────────────────────────────────────
+function renderUnlocks(){
+  document.getElementById('unlockGrid').innerHTML=ACHIEVEMENTS.map(a=>{
+    const done=earned.has(a.id);
+    const prog = a.progress ? a.progress() : null;
+    let progBar = '';
+    if(!done && prog && prog.max !== null && typeof prog.val === 'number'){
+      const pct = Math.min(100, Math.round((prog.val/prog.max)*100));
+      progBar = `<div class="uc-prog"><div class="uc-prog-fill" style="width:${pct}%"></div></div>
+        <div style="font-size:8px;letter-spacing:.15em;color:var(--text-mid);margin-top:4px">${prog.val} / ${prog.max}</div>`;
+    } else if(!done && prog && prog.max === null && prog.val){
+      progBar = `<div style="font-size:8px;letter-spacing:.15em;color:var(--text-mid);margin-top:6px">${prog.val}</div>`;
+    }
+    const rewardLabel = a.reward ? `<div class="uc-reward">🎁 UNLOCKS: ${a.reward.label}</div>` : '';
+    return `<div class="unlock-card${done?' earned':' locked-card'}">
+      <div class="uc-top">
+        <div class="uc-name">${a.icon} ${a.name}</div>
+        <div class="uc-badge">${done?'EARNED':'LOCKED'}</div>
+      </div>
+      <div class="uc-desc">${a.desc}</div>
+      ${rewardLabel}
+      ${progBar}
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SCREEN ROUTER
+// ─────────────────────────────────────────────────────────────────
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='settings') buildSettings();
+  if(id==='home')     { updateHomePreview(); renderStreakHome(); if(currentMusic!=='home') { stopMusic(400); setTimeout(startHomeMusic,450); } }
+  if(id==='stats')    renderStats();
+  if(id==='unlocks')  renderUnlocks();
+  if(id==='challenge') initChallengeScreen();
+  if(id==='settings') renderSkinPicker();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// BACKGROUND CANVAS
+// ─────────────────────────────────────────────────────────────────
+const bgCanvas=document.getElementById('bgCanvas');
+const bgCtx=bgCanvas.getContext('2d');
+let bgParticles=[], waveNodes=[];
+
+function resizeBg(){
+  bgCanvas.width=window.innerWidth;
+  bgCanvas.height=window.innerHeight;
+}
+resizeBg(); window.addEventListener('resize',resizeBg);
+
+function initParticles(){
+  bgParticles=[];
+  for(let i=0;i<40;i++) bgParticles.push({
+    orbitR:60+Math.random()*Math.min(window.innerWidth,window.innerHeight)*.35,
+    angle:Math.random()*Math.PI*2,
+    speed:(0.002+Math.random()*.006)*(Math.random()>.5?1:-1),
+    size:1+Math.random()*2.5, phase:Math.random()*Math.PI*2, trail:[]
+  });
+}
+function initWaves(){
+  waveNodes=[];
+  for(let r=0;r<8;r++) for(let c=0;c<12;c++)
+    waveNodes.push({col:c,row:r,phase:Math.random()*Math.PI*2,speed:.4+Math.random()*.6});
+}
+initParticles(); initWaves();
+window.addEventListener('resize',()=>{ initParticles(); initWaves(); });
+
+function getAccent(){ return getComputedStyle(document.body).getPropertyValue('--accent').trim()||'#c8c8ff'; }
+function getParticleOpacity(){ return parseFloat(getComputedStyle(document.body).getPropertyValue('--po'))||0.18; }
+
+function drawBg(ts){
+  const w=bgCanvas.width,h=bgCanvas.height,cx=w/2,cy=h/2,t=ts*.001;
+  bgCtx.clearRect(0,0,w,h);
+  const ac=getAccent(), op=getParticleOpacity();
+
+  if(prefs.bgMode==='orbits'){
+    bgParticles.forEach(p=>{
+      p.angle+=p.speed;
+      const x=cx+Math.cos(p.angle)*p.orbitR, y=cy+Math.sin(p.angle)*p.orbitR;
+      p.trail.push({x,y}); if(p.trail.length>18) p.trail.shift();
+      for(let i=1;i<p.trail.length;i++){
+        bgCtx.beginPath(); bgCtx.moveTo(p.trail[i-1].x,p.trail[i-1].y); bgCtx.lineTo(p.trail[i].x,p.trail[i].y);
+        bgCtx.strokeStyle=ac; bgCtx.globalAlpha=(i/p.trail.length)*op*.7; bgCtx.lineWidth=p.size*.5; bgCtx.stroke();
+      }
+      bgCtx.beginPath(); bgCtx.arc(x,y,p.size,0,Math.PI*2);
+      bgCtx.fillStyle=ac; bgCtx.globalAlpha=op*(0.7+0.3*Math.sin(t*2+p.phase)); bgCtx.fill();
+    });
+
+  } else if(prefs.bgMode==='waves'){
+    const cW=w/11, cH=h/7;
+    waveNodes.forEach(n=>{
+      const bx=n.col*cW, by=n.row*cH;
+      const x=bx+Math.sin(t*n.speed+n.phase)*18, y=by+Math.cos(t*n.speed*.7+n.phase)*12;
+      const pulse=.5+.5*Math.sin(t*n.speed+n.phase);
+      bgCtx.beginPath(); bgCtx.arc(x,y,1.5+pulse*1.5,0,Math.PI*2);
+      bgCtx.fillStyle=ac; bgCtx.globalAlpha=op*(0.5+pulse*.7); bgCtx.fill();
+      if(n.col<11){
+        const nb=waveNodes.find(m=>m.col===n.col+1&&m.row===n.row);
+        if(nb){
+          const nx=nb.col*cW+Math.sin(t*nb.speed+nb.phase)*18, ny=nb.row*cH+Math.cos(t*nb.speed*.7+nb.phase)*12;
+          bgCtx.beginPath(); bgCtx.moveTo(x,y); bgCtx.lineTo(nx,ny);
+          bgCtx.strokeStyle=ac; bgCtx.globalAlpha=op*.3; bgCtx.lineWidth=.8; bgCtx.stroke();
+        }
+      }
+    });
+
+  } else if(prefs.bgMode==='pulsar'){
+    const maxR=Math.max(w,h)*.7;
+    for(let i=0;i<6;i++){
+      const phase=(t*.3+i/6)%1, r=phase*maxR, a=(1-phase)*(1-phase)*op;
+      bgCtx.beginPath(); bgCtx.arc(cx,cy,r,0,Math.PI*2);
+      bgCtx.strokeStyle=ac; bgCtx.globalAlpha=a; bgCtx.lineWidth=1.5; bgCtx.stroke();
+    }
+    for(let i=0;i<8;i++){
+      const ang=t*.2+i*Math.PI/4;
+      bgCtx.beginPath(); bgCtx.moveTo(cx,cy); bgCtx.lineTo(cx+Math.cos(ang)*maxR*.8,cy+Math.sin(ang)*maxR*.8);
+      bgCtx.strokeStyle=ac; bgCtx.globalAlpha=op*.3; bgCtx.lineWidth=1; bgCtx.stroke();
+    }
+  }
+  bgCtx.globalAlpha=1;
+  requestAnimationFrame(drawBg);
+}
+requestAnimationFrame(drawBg);
+
+// ─────────────────────────────────────────────────────────────────
+// GAME STATE
+// ─────────────────────────────────────────────────────────────────
+let G=null, raf=null, chWinPending=false;
+
+function startGame(){
+  unlockAudio();
+  startGameMusic();
+  if(raf){ cancelAnimationFrame(raf); raf=null; }
+  PERF_HALF=prefs.wideWindow?.085:.055;
+  GOOD_HALF=prefs.wideWindow?.17:.12;
+  const d=getDiff();
+  G={ score:0,combo:0,bestCombo:0,speed:prefs.startSpeed,
+      lives:d.lives,maxLives:d.lives,
+      perfects:0,goods:0,misses:0,
+      sweep:0,target:.72,lastTs:null,phase:'playing',
+      tapsSinceTrap:0,nextTrapAt:30+Math.floor(Math.random()*20),
+      inTrap:false,trapPerfects:0,maxComboResets:0,comboResetCount:0 };
+
+  // Reset features
+  trail.length = 0;
+  zonePulsePhase = 0;
+  resetMilestones();
+  speedBurstActive = false;
+  clearTimeout(speedBurstTimer);
+  slowMoActive = false;
+  clearTimeout(slowMoTimer);
+  document.getElementById('slowMoOverlay')?.classList.remove('show');
+  document.getElementById('comboRing')?.setAttribute('opacity','0');
+  document.getElementById('comboMultLbl')?.classList.remove('show');
+  if(speedBurstBanner) speedBurstBanner.classList.remove('show');
+  applySkin();
+  renderSkinPicker();
+
+  // Apply super mode overrides
+  if(SUPER_MODES.infinitelives){ G.lives=99; G.maxLives=99; }
+  if(SUPER_MODES.slowmo)  G.speed=0.4;
+  if(SUPER_MODES.turbo)   G.speed=3.0;
+  if(prefs.diff==='blitz'){ G.speed=Math.max(G.speed,2.0); }
+  if(SUPER_MODES.widezone){ PERF_HALF=.25; GOOD_HALF=.38; }
+  window._adminWideZone = !!SUPER_MODES.widezone;
+  document.getElementById('vignette').style.opacity='0';
+  document.getElementById('sweepArc').setAttribute('stroke','var(--accent2)');
+  showScreen('game');
+  document.getElementById('modeLbl').textContent = {'zen':'ZEN','blitz':'BLITZ','ghost':'GHOST','sudden':'SUDDEN'}[prefs.diff] || 'SURVIVAL';
+  setScore(0); setComboDisplay(0); updateSpdBar(); setLivesNum(d.lives,d.lives);
+  // Challenge progress bar
+  if(chActive){ document.getElementById('chProgressWrap').style.display='block'; updateChProgress(0); }
+  else { document.getElementById('chProgressWrap').style.display='none'; }
+  runCountdown(3,()=>{ G.lastTs=null; raf=requestAnimationFrame(loop); });
+}
+
+function loop(ts){
+  if(!G||G.phase!=='playing')return;
+  const dt=G.lastTs?(ts-G.lastTs):0;
+  G.lastTs=ts;
+  G.sweep=(G.sweep+dt/(BASE_MS/G.speed))%1;
+  draw(dt);
+
+  raf=requestAnimationFrame(loop);
+}
+
+// Diamond helper: returns SVG polygon points string for a sharp diamond
+// tangentAngle = direction along ring at that point (radians)
+// half = half-length along ring tangent, spike = spike depth (radial)
+function diamondPoints(cx, cy, tangentAngle, half, spike){
+  // tangent direction (along ring) and radial direction (inward/outward)
+  const tx = Math.cos(tangentAngle), ty = Math.sin(tangentAngle); // tangent
+  const rx = -Math.sin(tangentAngle), ry = Math.cos(tangentAngle); // radial
+  const p1 = [cx + tx*half,      cy + ty*half     ]; // right tip
+  const p2 = [cx + rx*spike,     cy + ry*spike    ]; // outer spike
+  const p3 = [cx - tx*half,      cy - ty*half     ]; // left tip
+  const p4 = [cx - rx*spike,     cy - ry*spike    ]; // inner spike
+  return `${p1[0]},${p1[1]} ${p2[0]},${p2[1]} ${p3[0]},${p3[1]} ${p4[0]},${p4[1]}`;
+}
+
+function draw(dt){
+  const on=G.sweep*CIRC;
+  document.getElementById('sweepArc').setAttribute('stroke-dasharray',`${on} ${CIRC-on}`);
+  // Change 11: phosphor lag arc trails behind with CSS transition
+  const phosphor = document.getElementById('phosphorArc');
+  if(phosphor) phosphor.setAttribute('stroke-dasharray',`${on} ${CIRC-on}`);
+  const tipAng=G.sweep*2*Math.PI-Math.PI/2;
+  const tipCx = CX+R*Math.cos(tipAng);
+  const tipCy = CY+R*Math.sin(tipAng);
+  document.getElementById('sweepTip').setAttribute('cx', tipCx);
+  document.getElementById('sweepTip').setAttribute('cy', tipCy);
+
+  // Hook shape (skin)
+  const skin = getSkin();
+  const hookShape = document.getElementById('hookShape');
+  if(skin.drawShape){
+    hookShape.setAttribute('d', skin.drawShape(tipCx, tipCy, tipAng));
+    hookShape.setAttribute('stroke', skin.tipColor);
+    hookShape.setAttribute('opacity','0.85');
+  } else {
+    hookShape.setAttribute('opacity','0');
+  }
+
+  // Trail
+  addTrailPoint(tipCx, tipCy);
+  renderTrail(performance.now());
+
+  const tAng = G.target*2*Math.PI - Math.PI/2;
+  const tX = CX + R*Math.cos(tAng);
+  const tY = CY + R*Math.sin(tAng);
+  const tangent = tAng + Math.PI/2;
+
+  document.getElementById('targetRect').setAttribute('points',
+    diamondPoints(tX, tY, tangent, 6.5, 3.2));
+  document.getElementById('perfectRect').setAttribute('points',
+    diamondPoints(tX, tY, tangent, 2.8, 2.4));
+
+  const prox=Math.max(0,1-angDist(G.sweep,G.target)/(GOOD_HALF*1.6));
+  document.getElementById('targetGroup').setAttribute('filter',prox>.5?'url(#glowStrong)':'url(#glow)');
+  document.getElementById('targetRect').setAttribute('opacity',.72+prox*.28);
+
+  // Zone pulse + combo ring + shrinking zone
+  updateZonePulse(dt||16);
+  updateComboRing();
+  updateShrinkingZone();
+}
+
+function angDist(a,b){ let d=Math.abs(a-b)%1; return d>.5?1-d:d; }
+
+// ─────────────────────────────────────────────────────────────────
+// TAP
+// ─────────────────────────────────────────────────────────────────
+function handleTap(){
+  unlockAudio();
+  if(!G||G.phase!=='playing')return;
+  const dist=angDist(G.sweep,G.target);
+  processTap(dist<=PERF_HALF?'perfect':dist<=GOOD_HALF?'good':'miss');
+}
+
+window.addEventListener('touchstart',function(e){
+  if(document.querySelector('.screen.active')?.id!=='game')return;
+  if(document.getElementById('chWinOverlay').classList.contains('show'))return;
+  if(e.target.id==='quitBtn'){ e.preventDefault(); abortGame(); return; }
+  e.preventDefault();
+  handleTap();
+},{passive:false,capture:true});
+
+window.addEventListener('mousedown',function(e){
+  if(document.querySelector('.screen.active')?.id!=='game')return;
+  if(document.getElementById('chWinOverlay').classList.contains('show'))return;
+  if(e.target.id==='quitBtn'){ abortGame(); return; }
+  handleTap();
+},{capture:true});
+
+// ─────────────────────────────────────────────────────────────────
+// PROCESS TAP
+// ─────────────────────────────────────────────────────────────────
+function triggerSpeedTrap(){
+  // Suddenly slash speed to trap the player
+  const drop = 0.88 + Math.random() * 0.07; // drop only 5–12% — very gentle nudge
+  const newSpeed = Math.max(prefs.startSpeed, G.speed * drop);
+  G.speed = newSpeed;
+  G.inTrap = true;
+  G.trapTapsLeft = 3 + Math.floor(Math.random() * 3); // trap lasts 3-5 taps
+  // Schedule next trap: much longer gap — 35-55 taps
+  G.nextTrapAt = G.tapsSinceTrap + G.trapTapsLeft + 35 + Math.floor(Math.random() * 20);
+
+  // Visual + audio warning
+  const ring = document.getElementById('sweepArc');
+  ring.setAttribute('stroke','var(--accent)');
+  doFlash('var(--accent)', 0.25, 200);
+  showTapLbl('! SPEED DROP !', 'var(--accent)');
+  _whoosh(0.2, 0.22);
+  setTimeout(()=> _thud(65, 0.3, 0.5, 0.18), 60);
+}
+
+function processTap(result){
+  const area=document.getElementById('ringArea');
+  const game=document.getElementById('game');
+
+  // Super mode overrides
+  if(result==='miss' && (SUPER_MODES.godmode || SUPER_MODES.infinitelives)) result='good';
+  if(result==='good'  && window._adminWideZone) result='perfect';
+  const _ghostMode  = prefs.diff==='ghost';
+  const _suddenMode = prefs.diff==='sudden';
+
+  if(result==='miss'){
+    G.misses++; G.combo=0;
+    G.lives = _suddenMode ? 0 : Math.max(0, G.lives-1);
+    G.speed=Math.max(prefs.startSpeed, G.speed * 0.75);
+    G.inTrap=false;
+    slowMoActive=false;
+    clearTimeout(slowMoTimer);
+    document.getElementById('slowMoOverlay')?.classList.remove('show');
+    if(!_ghostMode){
+      playMiss();
+      haptic('miss');
+      showTapLbl('MISS','var(--miss)');
+      doFlash('var(--miss)',.38);
+      doShake(game,'shake');
+      screenShake();
+      const arc = document.getElementById('sweepArc');
+      arc.setAttribute('stroke','var(--miss)');
+      setTimeout(()=> updateDanger(), 500);
+      updateDanger();
+    } else {
+      haptic('miss'); // silent penalty
+    }
+  } else {
+    // Track combo resets for UNSTOPPABLE achievement
+    if(G.combo===MAX_COMBO){
+      G.comboResetCount=(G.comboResetCount||0)+1;
+      G.maxComboResets=Math.max(G.maxComboResets||0, G.comboResetCount);
+    }
+
+    // Scoring: base × speed multiplier × combo multiplier
+    const speedMult = 1 + (G.speed - 1) * 0.4;
+    const comboMult = 1 + G.combo * 0.3;
+    const basePts = result==='perfect' ? BASE_PTS + PERF_BONUS : BASE_PTS;
+    const pts = Math.round(basePts * speedMult * comboMult);
+    G.combo=Math.min(G.combo+1,MAX_COMBO);
+    G.bestCombo=Math.max(G.bestCombo,G.combo);
+    G.score+=pts;
+
+    if(result==='perfect'){
+      G.perfects++;
+      G.speed=Math.min(MAX_SPEED,G.speed+SPEED_PERF);
+      if(G.inTrap) G.trapPerfects=(G.trapPerfects||0)+1;
+      playPerfect(G.combo); haptic('perfect');
+      showTapLbl(`PERFECT +${pts}`,'var(--perfect)'); doShake(area,'nudge');
+      activateSlowMo();
+    } else {
+      G.goods++; G.speed=Math.min(MAX_SPEED,G.speed+SPEED_GOOD);
+      playGood(G.combo); haptic('good');
+      showTapLbl(`GOOD +${pts}`,'var(--good)');
+    }
+    G.target=.25+Math.random()*.58; G.sweep=0;
+  }
+
+  // Speed burst check
+  G.tapsSinceBurst=(G.tapsSinceBurst||0)+1;
+  // Speed burst — nerfed: only at speed >= 3.0, longer intervals
+  if(!speedBurstActive && G.speed >= 3.0 && G.tapsSinceBurst >= (G.nextBurstAt||30)){
+    G.tapsSinceBurst=0;
+    G.nextBurstAt = 28 + Math.floor(Math.random()*14);
+    triggerSpeedBurst();
+  }
+  // Warning flash 3 taps before burst
+  if(!speedBurstActive && G.speed >= 3.0 && G.nextBurstAt &&
+     (G.nextBurstAt - G.tapsSinceBurst) <= 3 && (G.nextBurstAt - G.tapsSinceBurst) > 0){
+    doFlash('var(--accent)', 0.12, 80);
+    showTapLbl('⚡', 'var(--accent)');
+  }
+
+  // Speed trap countdown
+  G.tapsSinceTrap=(G.tapsSinceTrap||0)+1;
+  if(G.inTrap){
+    G.trapTapsLeft--;
+    if(G.trapTapsLeft<=0) G.inTrap=false;
+  }
+  // Speed trap — nerfed: only at speed >= 3.0, longer gaps between traps
+  if(!G.inTrap && G.speed>=3.0 && G.tapsSinceTrap>=G.nextTrapAt){
+    triggerSpeedTrap();
+  }
+
+  setScore(G.score); setComboDisplay(G.combo); setLivesNum(G.lives,G.maxLives); updateSpdBar();
+
+  if(G.lives<=0 && G.phase==='playing' && prefs.diff !== 'zen'){
+    G.phase='dying';
+    cancelAnimationFrame(raf); raf=null;
+    playGameOver();
+    haptic('gameover');
+    shatterRing(()=>showResult());
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// RESULT
+// ─────────────────────────────────────────────────────────────────
+function showResult(){
+  stopMusic(500);
+  setTimeout(startHomeMusic, 600);
+  document.getElementById('vignette').style.opacity='0';
+  const savedG = G; G = null; // null out immediately so stray taps do nothing
+  const total=savedG.perfects+savedG.goods+savedG.misses;
+  const acc=total>0?Math.round((savedG.perfects+savedG.goods)/total*100):0;
+
+  const run={ score:savedG.score, acc, combo:savedG.bestCombo, speed:savedG.speed,
+              perfects:savedG.perfects, goods:savedG.goods, misses:savedG.misses, diff:prefs.diff,
+              trapPerfects:savedG.trapPerfects||0, maxComboResets:savedG.maxComboResets||0 };
+
+  const isNewBest=recordRun(run);
+  submitRunToLeaderboard(run); // Change 16: submit to global leaderboard
+  recordPlayToday(); // update daily streak
+  const newAchievements=checkAchievements(run);
+  if(newAchievements.length) playUnlock();
+
+  document.getElementById('rScore').textContent=savedG.score.toLocaleString();
+  const rName = document.getElementById('rPlayerName');
+  if(rName) rName.textContent = (PLAYER.name && PLAYER.name !== 'Player') ? PLAYER.name.toUpperCase() : '';
+  document.getElementById('rNewBest').style.display=isNewBest?'inline-block':'none';
+
+  document.getElementById('rUnlocks').innerHTML=newAchievements.map(a=>`
+    <div class="unlock-toast">
+      <div class="unlock-toast-title">🏆 ACHIEVEMENT UNLOCKED</div>
+      <div class="unlock-toast-name">${a.icon} ${a.name}</div>
+      ${a.reward ? `<div class="unlock-toast-reward">🎁 ${a.reward.label} is now available!</div>` : ''}
+    </div>`).join('');
+
+  renderXpBar(run.xp);
+  document.getElementById('rStats').innerHTML=`
+    <div><div class="sv">${savedG.bestCombo}×</div><div class="sk">BEST COMBO</div></div>
+    <div><div class="sv">${acc}%</div><div class="sk">ACCURACY</div></div>
+    <div><div class="sv">${savedG.perfects}</div><div class="sk">PERFECT</div></div>
+    <div><div class="sv">${savedG.speed.toFixed(1)}×</div><div class="sk">PEAK SPEED</div></div>`;
+
+  const w=document.getElementById('rWrap');
+  w.classList.remove('rIn'); void w.offsetWidth; w.classList.add('rIn');
+  // Show challenge button in result if active
+  const chBtn = document.getElementById('rChallengeBtn');
+  if(chBtn) chBtn.style.display = chActive ? 'inline-flex' : 'none';
+  if(chActive) renderChBoard();
+  showScreen('result');
+  // Record challenge result then refresh board
+  if(chActive){ recordChallengeResult(savedG.score); renderChBoard(); }
+  chWinPending = false;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────
+function updateDanger(){
+  if(!G) return; // guard: G may be null if game ended (e.g. sudden mode)
+  const ratio=G.lives/G.maxLives;
+  document.getElementById('vignette').style.opacity=ratio<=.2?.75:ratio<=.4?.45:ratio<=.6?.2:0;
+  const arc=document.getElementById('sweepArc');
+  if(G.lives===1) arc.setAttribute('stroke','var(--miss)');
+  else if(G.lives===2) arc.setAttribute('stroke','color-mix(in srgb,var(--miss) 60%,var(--accent2))');
+  else arc.setAttribute('stroke','var(--accent2)');
+}
+
+function shatterRing(cb){
+  const el=document.getElementById('shatter');
+  el.style.display='block'; el.innerHTML='';
+  const rect=document.getElementById('ringArea').getBoundingClientRect();
+  const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2, r=rect.width*.47;
+  for(let i=0;i<32;i++){
+    const ang=(i/32)*Math.PI*2, s=document.createElement('div');
+    s.className='shard';
+    const len=6+Math.random()*20, w=2+Math.random()*3;
+    s.style.cssText=`left:${cx}px;top:${cy}px;width:${w}px;height:${len}px;transform:rotate(${ang}rad) translateY(-${r}px);opacity:1`;
+    el.appendChild(s);
+    s.animate([
+      {transform:`rotate(${ang}rad) translateY(-${r}px) scale(1)`,opacity:1},
+      {transform:`rotate(${ang+.4-Math.random()*.8}rad) translateY(-${r*2+Math.random()*80}px) scale(.2)`,opacity:0}
+    ],{duration:550+Math.random()*300,easing:'cubic-bezier(.15,.8,.35,1)',fill:'forwards'});
+  }
+  doFlash('var(--miss)',.55,300);
+  setTimeout(()=>{el.style.display='none';el.innerHTML='';cb();},850);
+}
+
+// ── MILESTONES ────────────────────────────────────────────────────
+const MILESTONES = [100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000];
+const MILESTONE_LABELS = {
+  100:   '🎯 100',
+  250:   '⚡ 250',
+  500:   '🔥 500',
+  1000:  '💥 1,000',
+  2500:  '🚀 2,500',
+  5000:  '⭐ 5,000',
+  10000: '👑 10,000',
+  25000: '💎 25,000',
+  50000: '🌟 50,000',
+};
+let _lastMilestone = 0;
+let _milestoneTimer = null;
+
+function resetMilestones(){ _lastMilestone = 0; }
+
+function checkMilestone(score){
+  for(const m of MILESTONES){
+    if(score >= m && _lastMilestone < m){
+      _lastMilestone = m;
+      showMilestoneToast(MILESTONE_LABELS[m]);
+      return;
+    }
+  }
+}
+
+function showMilestoneToast(label){
+  const el = document.getElementById('milestoneToast');
+  el.textContent = label;
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(_milestoneTimer);
+  _milestoneTimer = setTimeout(()=> el.classList.remove('show'), 1800);
+  // Sound + haptic
+  _click(0.5, 2000, 0.15);
+  setTimeout(()=> _click(0.35, 2600, 0.1), 60);
+  if(navigator.vibrate) navigator.vibrate([20, 10, 30]);
+}
+
+function setScore(v){
+  const el=document.getElementById('scoreNum');
+  el.textContent=v.toLocaleString();
+  el.classList.remove('sPop'); void el.offsetWidth; el.classList.add('sPop');
+  checkMilestone(v);
+  if(chActive) { updateChProgress(v); checkChallengeWin(v); }
+}
+function setComboDisplay(c){
+  const val=document.getElementById('comboVal'), pre=document.getElementById('comboPre');
+  if(c>=2){ val.textContent=`×${c}`; val.classList.add('lit'); pre.style.visibility='visible';
+    val.classList.remove('cPop'); void val.offsetWidth; val.classList.add('cPop');
+  } else { val.textContent=''; val.classList.remove('lit'); pre.style.visibility='hidden'; }
+  // Change 8: VHS RGB glitch at ×5+
+  val.classList.toggle('glitch', c >= 5);
+}
+function setLivesNum(lives){ 
+  const isZen    = prefs.diff === 'zen';
+  const isSudden = prefs.diff === 'sudden';
+  document.getElementById('livesNum').textContent = isZen ? '∞' : isSudden ? '☠' : lives;
+  document.getElementById('livesNum').className='lives-num'+(((!isZen&&!isSudden) && lives===1)?' danger':''); }
+function updateSpdBar(){
+  const pct=Math.min(100,((G.speed-1)/(MAX_SPEED-1))*100);
+  document.getElementById('spdBar').style.width=Math.max(3,pct)+'%';
+  document.getElementById('spdBar').style.background=pct>75?'var(--miss)':pct>50?'color-mix(in srgb,var(--miss) 40%,var(--accent))':'var(--accent)';
+  document.getElementById('spdLbl').textContent=`×${G.speed.toFixed(1)}`;
+  // Change 9: update segmented bar
+  const segs = 6;
+  const activeFill = Math.round((pct / 100) * segs);
+  const isDanger = pct > 75;
+  for(let i=0;i<segs;i++){
+    const seg = document.getElementById('seg'+i);
+    if(!seg) continue;
+    const on = i < activeFill;
+    seg.classList.toggle('active', on && !isDanger);
+    seg.classList.toggle('danger-seg', on && isDanger);
+    if(!on){ seg.classList.remove('active','danger-seg'); }
+  }
+}
+function showTapLbl(text,color){
+  const el=document.getElementById('tapLbl');
+  el.textContent=text; el.style.color=color; el.style.opacity='1';
+  clearTimeout(el._t); el._t=setTimeout(()=>el.style.opacity='0',500);
+}
+function doFlash(color,alpha,dur=160){
+  const el=document.getElementById('flash');
+  el.style.background=color; el.style.opacity=alpha;
+  setTimeout(()=>el.style.opacity='0',dur);
+}
+function doShake(el,cls){
+  el.classList.remove('shake','nudge'); void el.offsetWidth; el.classList.add(cls);
+  setTimeout(()=>el.classList.remove(cls),500);
+}
+function runCountdown(n,cb){
+  const el=document.getElementById('cd'); el.classList.add('show');
+  if(n<=0){ playGo(); el.classList.remove('show'); cb(); return; }
+  el.textContent=n; playCountdown();
+  setTimeout(()=>runCountdown(n-1,cb),750);
+}
+function abortGame(){
+  unlockAudio(); if(raf){ cancelAnimationFrame(raf); raf=null; }
+  document.getElementById('vignette').style.opacity='0';
+  G=null; stopMusic(400); setTimeout(startHomeMusic,450); showScreen('home');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// KEYBOARD
+// ─────────────────────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'||e.code==='Enter'){
+    e.preventDefault(); unlockAudio();
+    const id=document.querySelector('.screen.active')?.id;
+    if(id==='game') handleTap();
+    else if(id==='home'||id==='result') startGame();
+  }
+});
+document.addEventListener('touchstart',()=>{ unlockAudio(); startHomeMusic(); },{once:true});
+document.addEventListener('mousedown',()=>{ unlockAudio(); startHomeMusic(); },{once:true});
+
+
+// ─────────────────────────────────────────────────────────────────
+// RANK / XP SYSTEM
+// XP is cumulative across all runs (stored in AT.totalXp).
+// Each run contributes: perfects×30 + goods×12 + combo_bonus + speed_bonus
+// Ranks are balanced so reaching LEGEND requires serious dedication.
+// ─────────────────────────────────────────────────────────────────
+const RANKS = [
+  { name:'RECRUIT',    xp:0      },
+  { name:'NOVICE',     xp:150    },
+  { name:'ADEPT',      xp:500    },
+  { name:'SKILLED',    xp:1200   },
+  { name:'EXPERT',     xp:2800   },
+  { name:'ELITE',      xp:5500   },
+  { name:'MASTER',     xp:10000  },
+  { name:'GRANDMASTER',xp:18000  },
+  { name:'LEGEND',     xp:32000  },
+];
+
+function calcRunXp(run){
+  // XP from this run: weighted by quality, not just raw score
+  const perfXp   = run.perfects * 30;
+  const goodXp   = run.goods * 12;
+  const comboXp  = run.combo * run.combo * 4; // combo² rewards streaks
+  const speedXp  = Math.floor((run.speed - 1) * 60);
+  const accBonus = run.acc >= 90 ? 80 : run.acc >= 80 ? 40 : run.acc >= 70 ? 15 : 0;
+  return Math.max(5, perfXp + goodXp + comboXp + speedXp + accBonus);
+}
+
+function getRank(totalXp){
+  let rank = RANKS[0];
+  for(const r of RANKS){ if(totalXp >= r.xp) rank = r; }
+  return rank;
+}
+function getNextRank(totalXp){
+  for(const r of RANKS){ if(totalXp < r.xp) return r; }
+  return null; // at max rank
+}
+function rankProgress(totalXp){
+  const cur = getRank(totalXp);
+  const next = getNextRank(totalXp);
+  if(!next) return 1;
+  return (totalXp - cur.xp) / (next.xp - cur.xp);
+}
+
+function renderXpBar(gainedXp){
+  const el = document.getElementById('rXpRow');
+  if(!el) return;
+  const totalXp = AT.totalXp || 0;
+  const prevXp  = Math.max(0, totalXp - gainedXp);
+  const rank    = getRank(totalXp);
+  const next    = getNextRank(totalXp);
+  const pct     = Math.round(rankProgress(totalXp) * 100);
+  const prevPct = Math.round(rankProgress(prevXp) * 100);
+  const rankChanged = getRank(prevXp).name !== rank.name;
+  el.innerHTML = `
+    <div class="xp-row">
+      <div class="rank-badge">${rank.name}${rankChanged?' ▲':''}</div>
+      <div class="xp-bar-wrap"><div class="xp-bar-fill" style="width:${prevPct}%" id="xpFill"></div></div>
+    </div>
+    <div style="display:flex;justify-content:space-between">
+      <span class="xp-gained">+${gainedXp.toLocaleString()} XP  ·  ${totalXp.toLocaleString()} total</span>
+      <span class="xp-label">${next ? next.name + ' →' : 'MAX RANK'}</span>
+    </div>
+  `;
+  // animate bar filling in
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      const fill = document.getElementById('xpFill');
+      if(fill) fill.style.width = pct + '%';
+    });
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────
+// DAILY STREAK
+// ─────────────────────────────────────────────────────────────────
+const STREAK_KEY = 'focus-streak-v1';
+
+// streak state stored persistently
+// { currentStreak, longestStreak, lastPlayedDate (YYYY-MM-DD), weekDays: [bool x7 last 7 days from today] }
+let STK = { currentStreak:0, longestStreak:0, lastPlayedDate:null, recentDates:[] };
+
+function todayStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function daysBetween(a, b){
+  // a, b are YYYY-MM-DD strings
+  const da = new Date(a), db = new Date(b);
+  return Math.round((db - da) / 86400000);
+}
+
+async function loadStreak(){
+  try {
+    const res = await window.storage.get(STREAK_KEY);
+    if(res && res.value) STK = {...STK, ...JSON.parse(res.value)};
+  } catch(e){}
+}
+
+async function saveStreak(){
+  try { await window.storage.set(STREAK_KEY, JSON.stringify(STK)); } catch(e){}
+}
+
+// Call once per game completion — updates streak if this is first play today
+async function recordPlayToday(){
+  const today = todayStr();
+  if(STK.lastPlayedDate === today) return; // already counted today
+
+  if(STK.lastPlayedDate){
+    const diff = daysBetween(STK.lastPlayedDate, today);
+    if(diff === 1){
+      STK.currentStreak++; // consecutive!
+    } else {
+      STK.currentStreak = 1; // broke streak
+    }
+  } else {
+    STK.currentStreak = 1; // first ever day
+  }
+  STK.longestStreak = Math.max(STK.longestStreak, STK.currentStreak);
+  STK.lastPlayedDate = today;
+
+  // Track last 7 unique dates played
+  if(!STK.recentDates) STK.recentDates = [];
+  if(!STK.recentDates.includes(today)) STK.recentDates.unshift(today);
+  if(STK.recentDates.length > 14) STK.recentDates.length = 14;
+
+  await saveStreak();
+  renderStreakHome();
+}
+
+function renderStreakHome(){
+  const today = todayStr();
+  // Check if streak is broken (last played was 2+ days ago)
+  if(STK.lastPlayedDate && STK.lastPlayedDate !== today){
+    const diff = daysBetween(STK.lastPlayedDate, today);
+    if(diff > 1) STK.currentStreak = 0; // display as broken (not saved, cosmetic)
+  }
+
+  const streakRow = document.getElementById('homeStreak');
+  const streakDots = document.getElementById('streakDots');
+
+  if(STK.longestStreak > 0 || STK.currentStreak > 0 || STK.lastPlayedDate){
+    streakRow.style.display = 'flex';
+    streakDots.style.display = 'flex';
+    document.getElementById('streakCount').textContent = STK.currentStreak;
+
+    // Show last 7 days as dots
+    const dots = [];
+    for(let i=6; i>=0; i--){
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const played = STK.recentDates && STK.recentDates.includes(ds);
+      const isToday = ds === today;
+      dots.push(`<div class="sdot${played?' done':''}${isToday&&played?' today':''}"></div>`);
+    }
+    dots.push(`<span class="sdot-lbl">7 DAYS</span>`);
+    streakDots.innerHTML = dots.join('');
+  } else {
+    streakRow.style.display = 'none';
+    streakDots.style.display = 'none';
+  }
+}
+
+// ── LOADING HELPERS ───────────────────────────────────────────────
+function setLoadProgress(pct, status){
+  document.getElementById('loadBar').style.width = pct + '%';
+  document.getElementById('loadStatus').textContent = status;
+}
+function hideLoadScreen(){
+  const el = document.getElementById('loadScreen');
+  el.classList.add('hide');
+  setTimeout(()=> el.style.display = 'none', 550);
+}
+function updateGreeting(){
+  const el = document.getElementById('homeGreeting');
+  if(!el) return;
+  if(PLAYER.name && PLAYER.name !== 'Player'){
+    el.textContent = 'HEY, ' + PLAYER.name.toUpperCase();
+  } else {
+    el.textContent = '';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// INIT — load all-time data first, then render
+// ─────────────────────────────────────────────────────────────────
+setLoadProgress(10, 'LOADING...');
+loadAllTime().then(()=>{
+  setLoadProgress(40, 'LOADING STREAK...');
+  return loadStreak();
+}).then(()=>{
+  setLoadProgress(70, 'LOADING PLAYER...');
+  return loadPlayer();
+}).then(()=>{
+  setLoadProgress(95, 'READY');
+  updateHomePreview();
+  buildSettings();
+  renderStreakHome();
+  updateGreeting();
+  setTimeout(()=>{
+    hideLoadScreen();
+    if(!PLAYER.name){
+      showNameModal();
+    } else {
+      sessionStart = Date.now();
+      setTimeout(()=>uploadSession(false), 2000);
+    }
+  }, 400);
+});
+
+// ─────────────────────────────────────────────────────────────────
+// ╔══════════════════════════════════════════════════════════╗
+// ║  PLAYER TRACKING + ADMIN PANEL                          ║
+// ║                                                          ║
+// ║  Setup:                                                  ║
+// ║  1. Go to https://jsonbin.io and create a free account  ║
+// ║  2. Create a new Bin with content: {"players":[]}        ║
+// ║  3. Copy your Bin ID and Master Key below               ║
+// ╚══════════════════════════════════════════════════════════╝
+const JSONBIN_BIN_ID  = '$2a$10$VnDbEuioULe7g75KtSWDgeGpHpaYeoP.9hvC.qtnKcbxAp9iZRjVm';
+const ADMIN_PASSWORD  = 'focus2024'; // change this!
+
+const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
+// ─────────────────────────────────────────────────────────────────
+// PLAYER IDENTITY  (stored locally per browser)
+// ─────────────────────────────────────────────────────────────────
+const PLAYER_KEY = 'focus-player-v1';
+let PLAYER = { name: null, id: null }; // id = random uid per browser
+
+function genUid(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+}
+
+async function loadPlayer(){
+  try {
+    const r = await window.storage.get(PLAYER_KEY);
+    if(r && r.value) PLAYER = JSON.parse(r.value);
+  } catch(e){}
+  // localStorage fallback — if storage API failed, try localStorage
+  if(!PLAYER.name){
+    try {
+      const local = localStorage.getItem(PLAYER_KEY);
+      if(local) PLAYER = JSON.parse(local);
+    } catch(e){}
+  }
+}
+
+async function savePlayer(){
+  try { await window.storage.set(PLAYER_KEY, JSON.stringify(PLAYER)); } catch(e){}
+  // Always also save to localStorage as backup
+  try { localStorage.setItem(PLAYER_KEY, JSON.stringify(PLAYER)); } catch(e){}
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SESSION TIMER
+// ─────────────────────────────────────────────────────────────────
+let sessionStart = Date.now();
+
+function getSessionMins(){
+  return Math.max(1, Math.round((Date.now() - sessionStart) / 60000));
+}
+
+function sessionStartStr(){
+  return new Date(sessionStart).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// PLAYER SESSION TRACKING — localStorage (no server needed)
+// ─────────────────────────────────────────────────────────────────
+const SESSION_STORE = 'focus-sessions-v1';
+
+function sessLoad(){
+  try { return JSON.parse(localStorage.getItem(SESSION_STORE) || '{"players":[]}'); }
+  catch(e){ return {players:[]}; }
+}
+function sessSave(data){
+  try { localStorage.setItem(SESSION_STORE, JSON.stringify(data)); } catch(e){}
+}
+
+function uploadSession(final=false){
+  if(!PLAYER.name) return;
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  const timeStr = now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+
+  const data = sessLoad();
+
+  const entry = {
+    id:        PLAYER.id,
+    name:      PLAYER.name,
+    date:      dateStr,
+    time:      timeStr,
+    ts:        Date.now(),
+    joinedAt:  sessionStartStr(),
+    leftAt:    final ? timeStr : null,
+    mins:      getSessionMins(),
+    runs:      AT.totalRuns,
+    bestScore: AT.bestScore,
+    active:    !final
+  };
+
+  const idx = data.players.findIndex(p => p.id === PLAYER.id);
+  if(idx >= 0){
+    entry.joinedAt = data.players[idx].joinedAt || entry.joinedAt; // preserve original join time
+    data.players[idx] = entry;
+  } else {
+    data.players.push(entry);
+  }
+
+  if(data.players.length > 200){
+    data.players.sort((a,b)=>b.ts-a.ts);
+    data.players.length = 200;
+  }
+
+  sessSave(data);
+}
+
+// Save every 2 minutes while active
+setInterval(()=>uploadSession(false), 120000);
+
+// Save on page unload
+window.addEventListener('beforeunload', ()=>{ uploadSession(true); });
+window.addEventListener('pagehide',     ()=>{ uploadSession(true); });
+
+// ─────────────────────────────────────────────────────────────────
+// NAME MODAL
+// ─────────────────────────────────────────────────────────────────
+function showNameModal(){
+  const m = document.getElementById('nameModal');
+  m.classList.add('show');
+  setTimeout(()=>document.getElementById('nameInput').focus(), 350);
+}
+
+function onNmInput(el){
+  const val = el.value.trim();
+  document.getElementById('nmCharCount').textContent = el.value.length + ' / 20';
+  document.getElementById('nmBtn').disabled = val.length === 0;
+}
+
+function submitName(){
+  const val = document.getElementById('nameInput').value.trim();
+  if(!val) return;
+  PLAYER.name = val.slice(0,20);
+  if(!PLAYER.id) PLAYER.id = genUid();
+  savePlayer();
+  document.getElementById('nameModal').classList.remove('show');
+  updateGreeting();
+  sessionStart = Date.now();
+  uploadSession(false);
+}
+
+function skipName(){
+  PLAYER.name = 'Player';
+  if(!PLAYER.id) PLAYER.id = genUid();
+  savePlayer();
+  document.getElementById('nameModal').classList.remove('show');
+  updateGreeting();
+  sessionStart = Date.now();
+  uploadSession(false);
+}
+
+document.getElementById('nameInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter') submitName();
+});
+
+// ─────────────────────────────────────────────────────────────────
+// ADMIN PANEL
+// ─────────────────────────────────────────────────────────────────
+let adminUnlocked = false;
+let admFilter = 'today';
+
+function checkAdminPw(){
+  const val = document.getElementById('admPwInput').value;
+  if(val === ADMIN_PASSWORD){
+    adminUnlocked = true;
+    document.getElementById('admPwScreen').style.display = 'none';
+    document.getElementById('admContent').style.display  = 'block';
+    loadAdminData();
+  } else {
+    document.getElementById('admPwErr').textContent = 'WRONG PASSWORD';
+    document.getElementById('admPwInput').value = '';
+    setTimeout(()=> document.getElementById('admPwErr').textContent='', 1800);
+  }
+}
+
+function loadAdminData(){
+  const rowsEl = document.getElementById('admRows');
+  rowsEl.innerHTML = '<div class="adm-empty">LOADING...</div>';
+
+  const data = sessLoad();
+  const players = data.players || [];
+  const now = Date.now();
+
+  // Mark activeNow = active flag set within last 5 mins
+  players.forEach(p => { p.activeNow = p.active && (now - p.ts) < 300000; });
+
+  // Sort: online first, then most recent
+  players.sort((a,b)=>{
+    if(a.activeNow && !b.activeNow) return -1;
+    if(!a.activeNow && b.activeNow) return 1;
+    return b.ts - a.ts;
+  });
+
+  const todayLabel = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  const filtered = admFilter==='all'    ? players
+    : admFilter==='today'  ? players.filter(p=>p.date===todayLabel)
+    : players.filter(p=>p.activeNow);
+
+  renderAdminStats(players);
+  renderAdminFilter(players);
+
+  if(!filtered.length){
+    rowsEl.innerHTML = `<div class="adm-empty">NO PLAYERS ${admFilter==='today'?'TODAY':admFilter==='online'?'ONLINE':'YET'}</div>`;
+    return;
+  }
+
+  rowsEl.innerHTML = filtered.map(p => {
+    const minsLabel = p.mins >= 60
+      ? `${Math.floor(p.mins/60)}h ${p.mins%60}m`
+      : `${p.mins || 0}m`;
+    const joinedLabel = p.joinedAt || p.time || '—';
+    const leftLabel   = p.activeNow
+      ? '<span style="color:#44ff88;font-size:7px;letter-spacing:.1em">ONLINE</span>'
+      : (p.leftAt || '—');
+    return `<div class="adm-row">
+      <div class="adm-name">
+        ${p.activeNow ? '<span class="adm-online"></span>' : ''}${escHtml(p.name)}
+        <div class="adm-date">${p.date}</div>
+      </div>
+      <div class="adm-date" style="font-size:8px">${joinedLabel}</div>
+      <div class="adm-date" style="font-size:8px">${leftLabel}</div>
+      <div class="adm-mins">${minsLabel}</div>
+      <div class="adm-score">${p.bestScore>0 ? p.bestScore.toLocaleString() : '—'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('admLastRefresh').textContent =
+    'REFRESHED ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+
+function renderAdminStats(players){
+  const el = document.getElementById('admStats');
+  if(!players){ el.innerHTML=''; return; }
+  const online = players.filter(p=>p.activeNow).length;
+  const today  = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  const todayCount = players.filter(p=>p.date===today).length;
+  el.innerHTML = `
+    <div class="adm-stat"><div class="adm-stat-val" style="color:#44ff88">${online}</div><div class="adm-stat-key">ONLINE NOW</div></div>
+    <div class="adm-stat"><div class="adm-stat-val">${todayCount}</div><div class="adm-stat-key">TODAY</div></div>
+    <div class="adm-stat"><div class="adm-stat-val">${players.length}</div><div class="adm-stat-key">ALL TIME</div></div>
+  `;
+}
+
+function renderAdminFilter(players){
+  const el = document.getElementById('admFilter');
+  const filters = [
+    { id:'today',  label:'TODAY' },
+    { id:'online', label:'ONLINE' },
+    { id:'all',    label:'ALL TIME' },
+  ];
+  el.innerHTML = filters.map(f=>
+    `<button class="adm-chip${admFilter===f.id?' sel':''}" onclick="setAdmFilter('${f.id}')">${f.label}</button>`
+  ).join('') + `<button class="adm-refresh" onclick="loadAdminData()">↻</button>`;
+}
+
+function setAdmFilter(f){ admFilter=f; loadAdminData(); }
+
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SUPER MODES (Admin Only)
+// ─────────────────────────────────────────────────────────────────
+const SUPER_MODES = {
+  godmode:      false,
+  slowmo:       false,
+  turbo:        false,
+  widezone:     false,
+  infinitelives:false,
+  rainbow:      false,
+};
+
+let _rainbowInterval = null;
+const _rainbowColors = ['#ff4466','#ff9944','#ffee44','#44ff88','#44ccff','#8866ff','#cc44ff'];
+let _rainbowIdx = 0;
+
+function toggleSuperMode(mode){
+  SUPER_MODES[mode] = !SUPER_MODES[mode];
+
+  // Mutual exclusions
+  if(mode === 'slowmo'  && SUPER_MODES.slowmo)  SUPER_MODES.turbo   = false;
+  if(mode === 'turbo'   && SUPER_MODES.turbo)   SUPER_MODES.slowmo  = false;
+
+  // Rainbow handling
+  if(mode === 'rainbow'){
+    if(SUPER_MODES.rainbow){
+      _rainbowInterval = setInterval(()=>{
+        _rainbowIdx = (_rainbowIdx+1) % _rainbowColors.length;
+        document.documentElement.style.setProperty('--accent', _rainbowColors[_rainbowIdx]);
+      }, 800);
+    } else {
+      clearInterval(_rainbowInterval);
+      document.documentElement.style.removeProperty('--accent');
+    }
+  }
+
+  refreshSuperModeUI();
+}
+
+function refreshSuperModeUI(){
+  let anyActive = false;
+  Object.keys(SUPER_MODES).forEach(m => {
+    const card   = document.getElementById('sm-'+m);
+    const status = document.getElementById('sm-'+m+'-status');
+    if(!card || !status) return;
+    if(SUPER_MODES[m]){
+      card.classList.add('active-mode');
+      status.textContent = 'ON';
+      anyActive = true;
+    } else {
+      card.classList.remove('active-mode');
+      status.textContent = 'OFF';
+    }
+  });
+  const banner = document.getElementById('activeModesBanner');
+  if(banner) banner.style.display = anyActive ? 'block' : 'none';
+}
+
+// Patch startGame to respect super modes
+const _origStartGame = window.startGame;
+window.startGame = function(){
+  _origStartGame();
+
+  // Apply super mode overrides after a tiny delay so game state is set
+  setTimeout(()=>{
+    if(SUPER_MODES.infinitelives){
+      lives = 99;
+      const el = document.getElementById('livesNum');
+      if(el) el.textContent = '99';
+    }
+    if(SUPER_MODES.slowmo){
+      speed = 0.4;
+    }
+    if(SUPER_MODES.turbo){
+      speed = 3.0;
+    }
+    if(SUPER_MODES.widezone){
+      // Triple the perfect window size flag — will be read by hit detection
+      window._adminWideZone = true;
+    } else {
+      window._adminWideZone = false;
+    }
+  }, 100);
+};
+
+// Patch miss handler to respect god mode
+const _origHandleMiss = window.handleMiss;
+if(typeof _origHandleMiss === 'function'){
+  window.handleMiss = function(){
+    if(SUPER_MODES.godmode) return; // ignore misses
+    _origHandleMiss();
+  };
+}
+
+
+const _origShowScreen = showScreen;
+window.showScreen = function(id){
+  _origShowScreen(id);
+  if(id !== 'admin'){
+    // don't reset unlock — keep session open
+  }
+  if(id === 'admin' && !adminUnlocked){
+    document.getElementById('admPwScreen').style.display = 'flex';
+    document.getElementById('admContent').style.display  = 'none';
+    document.getElementById('admPwInput').value = '';
+    document.getElementById('admPwErr').textContent = '';
+    setTimeout(()=>document.getElementById('admPwInput').focus(), 200);
+  }
+};
+
+
+
+
+// ─────────────────────────────────────────────────────────────────
+// CHALLENGE SYSTEM  v2 — 4-digit code, no external dependency
+//
+// Storage key: 'focus-challenges-v1' (window.storage)
+// Each challenge: { code, target, diff, setter, setterId, entries:[], created }
+// Code is a random 4-digit number (1000-9999), stored locally.
+// Both creator & joiner use the same device storage (shared game instance).
+// ─────────────────────────────────────────────────────────────────
+
+const CH_STORE_KEY  = 'focus-challenges-v1';
+const CH_TARGETS    = [1000, 2500, 5000, 10000, 25000];
+const CH_LABELS     = ['1K', '2.5K', '5K', '10K', '25K'];
+let   chTarget      = 5000;
+let   chDiff        = 'normal';
+let   chActive      = null;   // the challenge currently in play
+// chWinPending declared with G/raf above
+
+// ── Storage helpers ───────────────────────────────────────────────
+function chLoad(){
+  try {
+    const raw = localStorage.getItem(CH_STORE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch(e){ return {}; }
+}
+function chSave(store){
+  try { localStorage.setItem(CH_STORE_KEY, JSON.stringify(store)); } catch(e){}
+}
+
+// ── Tab switcher ──────────────────────────────────────────────────
+function chSwitchTab(tab){
+  document.getElementById('ch-panel-create').style.display = tab==='create' ? 'block' : 'none';
+  document.getElementById('ch-panel-join').style.display   = tab==='join'   ? 'block' : 'none';
+  document.getElementById('ch-tab-create').classList.toggle('active', tab==='create');
+  document.getElementById('ch-tab-join').classList.toggle('active',   tab==='join');
+  if(tab==='join') setTimeout(()=>document.getElementById('chd0').focus(), 100);
+}
+
+// ── Init challenge screen ─────────────────────────────────────────
+function initChallengeScreen(){
+  // Target preset chips
+  document.getElementById('ch-target-opts').innerHTML = CH_TARGETS.map((t,i) =>
+    `<div class="chip${t===chTarget?' sel':''}" onclick="setChTarget(${t})">${CH_LABELS[i]}</div>`
+  ).join('');
+
+  // Diff chips
+  const diffs = [{id:'easy',label:'EASY'},{id:'normal',label:'NORMAL'},{id:'hard',label:'HARD'}];
+  document.getElementById('ch-diff-opts').innerHTML = diffs.map(d =>
+    `<div class="chip${d.id===chDiff?' sel':''}" onclick="setChDiff('${d.id}')">${d.label}</div>`
+  ).join('');
+
+  // Slider
+  const sl = document.getElementById('ch-custom-slider');
+  sl.value = chTarget;
+  const pct = ((sl.value - sl.min) / (sl.max - sl.min)) * 100;
+  sl.style.setProperty('--pct', pct + '%');
+  document.getElementById('ch-custom-val').textContent = chTarget.toLocaleString();
+
+  // Show board if there's a recent active challenge
+  if(chActive) renderChBoard();
+}
+
+function setChTarget(t){
+  chTarget = t;
+  initChallengeScreen();
+}
+function setChDiff(d){
+  chDiff = d;
+  initChallengeScreen();
+}
+function onChTargetSlider(el){
+  chTarget = parseInt(el.value);
+  const pct = ((el.value - el.min) / (el.max - el.min)) * 100;
+  el.style.setProperty('--pct', pct + '%');
+  document.getElementById('ch-custom-val').textContent = chTarget.toLocaleString();
+  document.querySelectorAll('#ch-target-opts .chip').forEach(c => c.classList.remove('sel'));
+}
+
+// ── CREATE (Change 17: uses Supabase rooms table with localStorage fallback) ──
+async function createChallenge(){
+  if(!PLAYER.name){ showNameModal(); return; }
+
+  const btn = document.getElementById('ch-create-btn');
+  const errEl = document.getElementById('ch-join-err'); // reuse error display
+  if(btn){ btn.textContent = 'CREATING...'; btn.disabled = true; }
+  if(errEl) errEl.textContent = '';
+
+  // Try Supabase first
+  let challenge = null;
+  let supabaseOk = false;
+  try {
+    const sbRoom = await createRoom(chTarget, chDiff, PLAYER.name, PLAYER.id);
+    if(sbRoom){
+      supabaseOk = true;
+      challenge = {
+        code:      sbRoom.code,
+        target:    sbRoom.target,
+        diff:      sbRoom.diff,
+        setter:    sbRoom.setter_name,
+        setterId:  sbRoom.setter_id,
+        created:   new Date(sbRoom.created_at).getTime(),
+        entries:   sbRoom.entries || []
+      };
+      // Cache locally too
+      const store = chLoad();
+      store[challenge.code] = challenge;
+      chSave(store);
+    }
+  } catch(e){ console.error('FOCUS createChallenge exception:', e); }
+
+  if(!challenge){
+    // Fallback: local-only (only works same-device — warn user)
+    const store = chLoad();
+    let code; let attempts = 0;
+    do { code = String(Math.floor(1000 + Math.random() * 9000)); attempts++; }
+    while(store[code] && attempts < 20);
+    challenge = {
+      code, target: chTarget, diff: chDiff, setter: PLAYER.name,
+      setterId: PLAYER.id, created: Date.now(), entries: []
+    };
+    store[code] = challenge;
+    chSave(store);
+    // Warn — this code won't work cross-device
+    if(errEl) errEl.style.color = 'var(--accent)';
+    if(errEl) errEl.textContent = '⚠ OFFLINE MODE — code only works on this device';
+  }
+
+  chActive = challenge;
+  if(btn){ btn.textContent = '🎯 CREATE CHALLENGE'; btn.disabled = false; }
+
+  document.getElementById('ch-code-box').style.display = 'block';
+  document.getElementById('ch-create-btn').style.display = 'none';
+  document.getElementById('ch-code-display').textContent = challenge.code;
+  document.getElementById('ch-code-meta').textContent =
+    `TARGET ${chTarget.toLocaleString()} · ${chDiff.toUpperCase()} · ${supabaseOk ? 'Share this code with your friend' : 'LOCAL ONLY'}`;
+
+  document.getElementById('ch-board-panel').style.display = 'block';
+  document.getElementById('ch-board-rows').innerHTML = '<div class="adm-empty">NO ENTRIES YET</div>';
+}
+
+function chCopyCode(){
+  const code = chActive ? chActive.code : '';
+  if(navigator.clipboard){ navigator.clipboard.writeText(code).catch(()=>{}); }
+  const btn = document.getElementById('ch-copy-btn');
+  btn.textContent = 'COPIED!';
+  setTimeout(()=> btn.textContent = 'COPY CODE', 1500);
+}
+
+// ── JOIN ──────────────────────────────────────────────────────────
+function chDigitInput(idx){
+  const el = document.getElementById('chd' + idx);
+  const val = el.value.replace(/\D/g,'');
+  el.value = val.slice(-1);
+  el.classList.toggle('filled', el.value !== '');
+  if(el.value && idx < 3) document.getElementById('chd' + (idx+1)).focus();
+  // Auto-submit when all 4 filled
+  const code = [0,1,2,3].map(i => document.getElementById('chd'+i).value).join('');
+  if(code.length === 4) joinChallenge();
+}
+
+function chDigitKey(e, idx){
+  if(e.key === 'Backspace'){
+    const el = document.getElementById('chd' + idx);
+    if(!el.value && idx > 0){
+      const prev = document.getElementById('chd' + (idx-1));
+      prev.value = '';
+      prev.classList.remove('filled');
+      prev.focus();
+    }
+  }
+  if(e.key === 'Enter') joinChallenge();
+}
+
+// ── JOIN (Change 17: checks Supabase rooms then falls back to local) ──
+async function joinChallenge(){
+  const code = [0,1,2,3].map(i => document.getElementById('chd'+i).value).join('');
+  if(code.length < 4){ showChJoinErr('ENTER ALL 4 DIGITS'); return; }
+
+  const joinBtn = document.querySelector('#ch-panel-join .hbtn.p');
+  if(joinBtn){ joinBtn.textContent = 'LOOKING UP...'; joinBtn.disabled = true; }
+
+  let ch = null;
+
+  // 1. Try Supabase
+  try {
+    const sbRoom = await joinRoom(code);
+    if(sbRoom){
+      ch = {
+        code: sbRoom.code, target: sbRoom.target, diff: sbRoom.diff,
+        setter: sbRoom.setter_name, setterId: sbRoom.setter_id,
+        created: new Date(sbRoom.created_at).getTime(), entries: sbRoom.entries || []
+      };
+      // Cache locally
+      const store = chLoad();
+      store[code] = ch;
+      chSave(store);
+    }
+  } catch(e){}
+
+  // 2. Fallback to local storage
+  if(!ch){
+    const store = chLoad();
+    ch = store[code] || null;
+  }
+
+  if(joinBtn){ joinBtn.textContent = 'JOIN & PLAY'; joinBtn.disabled = false; }
+
+  if(!ch){
+    showChJoinErr('CODE NOT FOUND — CHECK AND TRY AGAIN');
+    document.getElementById('ch-code-inputs').classList.remove('shake');
+    void document.getElementById('ch-code-inputs').offsetWidth;
+    document.getElementById('ch-code-inputs').classList.add('shake');
+    return;
+  }
+
+  if(Date.now() - ch.created > 86400000){
+    showChJoinErr('THIS CHALLENGE HAS EXPIRED');
+    return;
+  }
+
+  clearChJoinErr();
+  chActive = ch;
+
+  // Show the joined card
+  const setterEntry = (ch.entries||[]).find(e => e.id === ch.setterId);
+  const setterLine = setterEntry
+    ? `${escHtml(ch.setter)} scored ${setterEntry.score.toLocaleString()}`
+    : `${escHtml(ch.setter)} hasn't played yet`;
+
+  document.getElementById('ch-joined-from').textContent = ch.setter;
+  document.getElementById('ch-joined-meta').innerHTML =
+    `FIRST TO HIT <strong style="color:var(--accent)">${ch.target.toLocaleString()}</strong><br>` +
+    `${chDiff.toUpperCase()} · ${setterLine}`;
+  document.getElementById('ch-joined-card').style.display = 'block';
+
+  // Show board
+  document.getElementById('ch-board-panel').style.display = 'block';
+  renderChBoard();
+}
+
+function showChJoinErr(msg){
+  document.getElementById('ch-join-err').textContent = msg;
+  setTimeout(()=> clearChJoinErr(), 2500);
+}
+function clearChJoinErr(){
+  document.getElementById('ch-join-err').textContent = '';
+}
+
+// ── START a challenge run ─────────────────────────────────────────
+function startChallenge(ch){
+  chActive = ch;
+  prefs.diff = ch.diff;
+  startGame();
+}
+
+// ── IN-GAME: progress bar ─────────────────────────────────────────
+function updateChProgress(score){
+  if(!chActive) return;
+  const pct = Math.min(100, (score / chActive.target) * 100);
+  document.getElementById('chProgressFill').style.width = pct + '%';
+  document.getElementById('chProgressLeft').textContent = score.toLocaleString();
+  document.getElementById('chProgressRight').textContent = 'TARGET: ' + chActive.target.toLocaleString();
+}
+
+// ── WIN mid-run ───────────────────────────────────────────────────
+function checkChallengeWin(score){
+  if(!chActive || !G || G.phase !== 'playing' || chWinPending) return;
+  if(score >= chActive.target){
+    chWinPending = true;
+    G.phase = 'won';
+    cancelAnimationFrame(raf); raf = null;
+
+    const beaten = (chActive.entries||[]).filter(e => e.id !== PLAYER.id && e.won).length;
+    const title  = score >= chActive.target * 1.5 ? '🔥 CRUSHED IT!' : '🎯 TARGET HIT!';
+    const sub    = beaten
+      ? `You hit ${chActive.target.toLocaleString()}!\n${beaten} other${beaten>1?'s':''} got here too.`
+      : `First to hit ${chActive.target.toLocaleString()}!`;
+
+    document.getElementById('chWinTitle').textContent = title;
+    document.getElementById('chWinSub').textContent = sub;
+    document.getElementById('chWinOverlay').classList.add('show');
+
+    doFlash('var(--accent)', 0.45, 700);
+    _whoosh(0.28, 0.3);
+    _thud(130, 0.5, 0.15, 0.25);
+    setTimeout(()=> _click(0.65, 2200, 0.2),  80);
+    setTimeout(()=> _click(0.5,  2800, 0.18), 180);
+  }
+}
+
+function chWinContinue(){
+  document.getElementById('chWinOverlay').classList.remove('show');
+  if(G && G.phase === 'won'){
+    G.phase = 'dying';
+    showResult();
+  } else if(!G) {
+    // G already nulled out, just show result screen
+    showScreen('result');
+  }
+}
+
+// ── Record result after run ───────────────────────────────────────
+function recordChallengeResult(score){
+  if(!chActive) return;
+  const store = chLoad();
+  const ch = store[chActive.code];
+  if(!ch) return;
+
+  const entry = {
+    id:   PLAYER.id,
+    name: PLAYER.name,
+    score,
+    won:  score >= chActive.target,
+    ts:   Date.now()
+  };
+
+  if(!ch.entries) ch.entries = [];
+  const idx = ch.entries.findIndex(e => e.id === PLAYER.id);
+  if(idx >= 0){
+    if(score > ch.entries[idx].score) ch.entries[idx] = entry;
+  } else {
+    ch.entries.push(entry);
+  }
+
+  store[chActive.code] = ch;
+  chSave(store);
+  chActive = ch;
+
+  // Change 17: also push score to Supabase room
+  if(PLAYER.name) submitRoomScore(chActive.code, PLAYER.name, score).catch(()=>{});
+}
+
+// ── Render leaderboard ────────────────────────────────────────────
+function renderChBoard(){
+  const rows = document.getElementById('ch-board-rows');
+  if(!rows || !chActive) return;
+
+  const sorted = [...(chActive.entries||[])].sort((a,b) => b.score - a.score);
+  if(!sorted.length){
+    rows.innerHTML = '<div class="adm-empty">NO ENTRIES YET</div>'; return;
+  }
+
+  rows.innerHTML = sorted.map((e,i) => `
+    <div class="ch-board-row">
+      <div class="ch-board-rank${i===0?' gold':''}">${i+1}</div>
+      <div class="ch-board-name">
+        ${escHtml(e.name)}${e.id===PLAYER.id?' <span style="font-size:7px;opacity:.5">(you)</span>':''}
+      </div>
+      <div class="ch-board-score">${e.score.toLocaleString()}</div>
+      <span class="ch-board-badge ${e.won?'won':'lost'}">${e.won?'✓ WON':'LOST'}</span>
+    </div>
+  `).join('');
+}
+
+function chRefreshBoard(){
+  if(!chActive) return;
+  const store = chLoad();
+  if(store[chActive.code]) chActive = store[chActive.code];
+  renderChBoard();
+}
+
+function clearActiveChallenge(){
+  chActive    = null;
+  chWinPending = false;
+  const w = document.getElementById('chProgressWrap');
+  if(w) w.style.display = 'none';
+}
+
+
+// ═════════════════════════════════════════════════════════════════
+// GAME FEATURES: Combo Ring · Speed Burst · Shrinking Zone
+//                Hook Skins · Screen Shake · Combo Trail
+//                Zone Pulse · Slow-Mo Window
+// ═════════════════════════════════════════════════════════════════
+
+// ── HOOK SKINS ────────────────────────────────────────────────────
+const HOOK_SKINS = {
+  default: {
+    label: 'HOOK',
+    tipR: 3.5, tipColor: 'var(--accent)',
+    trailColor: 'var(--accent)', trailLen: 10,
+    drawShape: null
+  },
+  claw: {
+    label: 'CLAW',
+    tipR: 2.8, tipColor: 'var(--accent)',
+    trailColor: 'var(--accent)', trailLen: 14,
+    drawShape: (cx, cy, ang) => {
+      const lines = [-0.35, 0, 0.35].map(offset => {
+        const a = ang + offset;
+        const len = 6;
+        return `M${cx},${cy} L${cx + Math.cos(a)*len},${cy + Math.sin(a)*len}`;
+      });
+      return lines.join(' ');
+    }
+  },
+  anchor: {
+    label: 'ANCHOR',
+    tipR: 3.0, tipColor: 'var(--accent)',
+    trailColor: 'var(--accent)', trailLen: 8,
+    drawShape: (cx, cy, ang) => {
+      const r = ang;
+      const t = ang - Math.PI/2;
+      const arm = 4.5;
+      return `M${cx + Math.cos(t)*arm},${cy + Math.sin(t)*arm}
+              L${cx - Math.cos(t)*arm},${cy - Math.sin(t)*arm}
+              M${cx},${cy} L${cx + Math.cos(r)*5},${cy + Math.sin(r)*5}`;
+    }
+  },
+  flame: {
+    label: 'FLAME',
+    tipR: 4.0, tipColor: 'var(--accent)',
+    trailColor: 'var(--accent)', trailLen: 18,
+    drawShape: null
+  },
+  star: {
+    label: 'STAR',
+    tipR: 3.2, tipColor: 'var(--accent)',
+    trailColor: 'var(--accent)', trailLen: 12,
+    drawShape: (cx, cy, ang) => {
+      const pts = [];
+      for(let i=0;i<8;i++){
+        const a = ang + i * Math.PI/4;
+        const r = i%2===0 ? 4.5 : 2;
+        pts.push(`${cx+Math.cos(a)*r},${cy+Math.sin(a)*r}`);
+      }
+      return `M${pts.join('L')}Z`;
+    }
+  },
+  ghost: {
+    label: 'GHOST',
+    tipR: 3.5, tipColor: 'var(--accent)',
+    trailColor: 'var(--accent)', trailLen: 22,
+    drawShape: null
+  },
+};
+
+let activeSkin = 'default';
+
+function getSkin(){ return HOOK_SKINS[activeSkin] || HOOK_SKINS.default; }
+
+function applySkin(){
+  const skin = getSkin();
+  const tip = document.getElementById('sweepTip');
+  tip.setAttribute('r', skin.tipR);
+  tip.setAttribute('fill', skin.tipColor);
+}
+
+// Render hook skins in settings
+function renderSkinPicker(){
+  const existing = document.getElementById('skinPickerSection');
+  if(existing) return; // already rendered
+  const settingsWrap = document.querySelector('#settings > div');
+  if(!settingsWrap) return;
+
+  const section = document.createElement('div');
+  section.id = 'skinPickerSection';
+  section.innerHTML = `
+    <div class="ssec">HOOK SKIN</div>
+    <div class="skin-grid" id="skinGrid"></div>
+  `;
+  // Insert before the first ssec that contains "DIFFICULTY"
+  const ssecs = settingsWrap.querySelectorAll('.ssec');
+  const diffSec = [...ssecs].find(s => s.textContent.includes('DIFFICULTY'));
+  if(diffSec) settingsWrap.insertBefore(section, diffSec);
+  else settingsWrap.prepend(section);
+
+  refreshSkinGrid();
+}
+
+function refreshSkinGrid(){
+  const grid = document.getElementById('skinGrid');
+  if(!grid) return;
+  grid.innerHTML = Object.entries(HOOK_SKINS).map(([id, skin]) => `
+    <div class="skin-card${activeSkin===id?' sel':''}" onclick="selectSkin('${id}')">
+      <svg width="36" height="36" viewBox="-18 -18 36 36">
+        <circle r="${skin.tipR+1}" fill="${skin.tipColor}" opacity="0.9"/>
+        ${skin.label==='CLAW' ? '<line x1="0" y1="0" x2="6" y2="-5" stroke="'+skin.tipColor+'" stroke-width="1.5" stroke-linecap="round"/><line x1="0" y1="0" x2="7" y2="0" stroke="'+skin.tipColor+'" stroke-width="1.5" stroke-linecap="round"/><line x1="0" y1="0" x2="6" y2="5" stroke="'+skin.tipColor+'" stroke-width="1.5" stroke-linecap="round"/>' : ''}
+        ${skin.label==='ANCHOR' ? '<line x1="-7" y1="2" x2="7" y2="2" stroke="'+skin.tipColor+'" stroke-width="1.5" stroke-linecap="round"/>' : ''}
+        ${skin.label==='FLAME' ? '<ellipse rx="4" ry="7" fill="'+skin.tipColor+'" opacity="0.5"/>' : ''}
+        ${skin.label==='STAR' ? '<polygon points="0,-7 2,-2 7,-2 3,1 5,6 0,3 -5,6 -3,1 -7,-2 -2,-2" fill="'+skin.tipColor+'"/>' : ''}
+      </svg>
+      <div class="skin-lbl">${skin.label}</div>
+    </div>
+  `).join('');
+}
+
+function selectSkin(id){
+  activeSkin = id;
+  applySkin();
+  refreshSkinGrid();
+  try { localStorage.setItem('focus-skin', id); } catch(e){}
+}
+
+// Load saved skin
+try {
+  const saved = localStorage.getItem('focus-skin');
+  if(saved && HOOK_SKINS[saved]) activeSkin = saved;
+} catch(e){}
+
+// ── COMBO TRAIL ───────────────────────────────────────────────────
+const trail = []; // [{cx,cy,age}]
+const TRAIL_MAX_AGE = 600; // ms
+
+function addTrailPoint(cx, cy){
+  trail.push({ cx, cy, born: performance.now() });
+  if(trail.length > 40) trail.shift();
+}
+
+function renderTrail(now){
+  const skin = getSkin();
+  const trailLen = skin.trailLen;
+  const g = document.getElementById('trailGroup');
+  if(!g) return;
+
+  // Clean old points
+  while(trail.length && now - trail[0].born > TRAIL_MAX_AGE) trail.shift();
+
+  // Render
+  const pts = trail.slice(-trailLen);
+  let html = '';
+  pts.forEach((p, i) => {
+    const age = (now - p.born) / TRAIL_MAX_AGE;
+    const alpha = (1 - age) * (i / pts.length) * (G ? Math.min(1, G.combo / 4) : 0);
+    if(alpha < 0.02) return;
+    const r = 1.5 * (i / pts.length);
+    html += `<circle cx="${p.cx.toFixed(2)}" cy="${p.cy.toFixed(2)}" r="${r.toFixed(2)}"
+      fill="${skin.trailColor}" opacity="${alpha.toFixed(2)}"/>`;
+  });
+  g.innerHTML = html;
+}
+
+// ── ZONE PULSE ────────────────────────────────────────────────────
+let zonePulsePhase = 0;
+
+function updateZonePulse(dt){
+  if(!G || G.combo < 3) {
+    document.getElementById('zonePulse').setAttribute('opacity', '0');
+    return;
+  }
+  const bpm = 200;
+  const period = (60000 / bpm);
+  zonePulsePhase = (zonePulsePhase + dt / period) % 1;
+  const pulse = Math.pow(Math.sin(zonePulsePhase * Math.PI), 3);
+  const intensity = Math.min(1, (G.combo - 3) / 7) * 0.7;
+  const zp = document.getElementById('zonePulse');
+  zp.setAttribute('opacity', (pulse * intensity).toFixed(3));
+
+  // Position pulse at target zone
+  const tAng = G.target * 2 * Math.PI - Math.PI/2;
+  const tX = CX + R * Math.cos(tAng);
+  const tY = CY + R * Math.sin(tAng);
+  zp.setAttribute('cx', tX.toFixed(2));
+  zp.setAttribute('cy', tY.toFixed(2));
+  zp.setAttribute('r', (4 + pulse * 3).toFixed(2));
+  zp.setAttribute('stroke', G.combo >= 8 ? 'var(--accent)' : 'var(--perfect)');
+}
+
+// ── COMBO MULTIPLIER RING ─────────────────────────────────────────
+const COMBO_RING_THRESHOLD = 5; // ring appears at x5 combo
+const COMBO_RING_CIRC = 2 * Math.PI * 46; // r=46
+
+function updateComboRing(){
+  const cr = document.getElementById('comboRing');
+  const lbl = document.getElementById('comboMultLbl');
+  if(!G || G.combo < COMBO_RING_THRESHOLD){
+    cr.setAttribute('opacity','0');
+    if(lbl) lbl.classList.remove('show');
+    return;
+  }
+  // Fill arc proportional to combo above threshold
+  const progress = Math.min(1, (G.combo - COMBO_RING_THRESHOLD) / (MAX_COMBO - COMBO_RING_THRESHOLD));
+  const on = progress * COMBO_RING_CIRC;
+  cr.setAttribute('stroke-dasharray', `${on.toFixed(1)} ${(COMBO_RING_CIRC - on).toFixed(1)}`);
+  cr.setAttribute('opacity', '0.8');
+  cr.setAttribute('stroke', G.combo >= MAX_COMBO ? 'var(--perfect)' : 'var(--accent)');
+
+  // Multiplier label
+  const mult = (1 + G.combo * 0.3).toFixed(1);
+  if(lbl){
+    lbl.textContent = `×${mult}`;
+    lbl.classList.add('show');
+  }
+}
+
+// ── SHRINKING ZONE ────────────────────────────────────────────────
+// Perfect zone shrinks as combo rises — starts shrinking at x4
+const BASE_PERF_HALF = () => prefs.wideWindow ? 0.085 : 0.055;
+const BASE_GOOD_HALF = () => prefs.wideWindow ? 0.17  : 0.12;
+const MIN_PERF_SHRINK = 0.90; // shrinks to 90% at max combo — barely noticeable
+
+function updateShrinkingZone(){
+  if(!G) return;
+  if(G.combo < 4){
+    PERF_HALF = BASE_PERF_HALF();
+    GOOD_HALF = BASE_GOOD_HALF();
+    document.getElementById('perfectRect').setAttribute('fill', 'var(--accent)');
+    return;
+  }
+  const t = Math.min(1, (G.combo - 6) / (MAX_COMBO - 6));
+  const factor = 1 - t * (1 - MIN_PERF_SHRINK);
+  PERF_HALF = BASE_PERF_HALF() * factor;
+  GOOD_HALF = BASE_GOOD_HALF() * (1 - t * 0.1);
+  if(SUPER_MODES.widezone){ PERF_HALF = 0.25; GOOD_HALF = 0.38; }
+
+  // Visual hint: target glows stronger as zone shrinks at high combo
+  if(t > 0.05){
+    document.getElementById('targetGroup').setAttribute('filter', t > 0.5 ? 'url(#glowStrong)' : 'url(#glow)');
+  } else {
+    document.getElementById('targetGroup').setAttribute('filter', 'url(#glow)');
+  }
+}
+
+// ── SPEED BURST ───────────────────────────────────────────────────
+let speedBurstActive = false;
+let speedBurstTimer = null;
+let speedBurstBanner = null;
+
+function triggerSpeedBurst(){
+  if(speedBurstActive || !G || G.phase !== 'playing') return;
+  speedBurstActive = true;
+
+  const originalSpeed = G.speed;
+  const burstSpeed = Math.min(MAX_SPEED, G.speed * 1.2 + 0.1); // very gentle burst
+  G.speed = burstSpeed;
+
+  // Banner
+  if(!speedBurstBanner){
+    speedBurstBanner = document.createElement('div');
+    speedBurstBanner.className = 'speed-burst-banner';
+    speedBurstBanner.textContent = '⚡ SPEED BURST!';
+    document.body.appendChild(speedBurstBanner);
+  }
+  speedBurstBanner.classList.add('show');
+  _whoosh(0.35, 0.25);
+  haptic('burst');
+
+  // Burst ring color
+  document.getElementById('sweepArc').setAttribute('stroke', 'var(--accent)');
+
+  clearTimeout(speedBurstTimer);
+  speedBurstTimer = setTimeout(()=>{
+    speedBurstActive = false;
+    if(G){ G.speed = Math.max(originalSpeed, G.speed * 0.75); }
+    if(speedBurstBanner) speedBurstBanner.classList.remove('show');
+    document.getElementById('sweepArc').setAttribute('stroke', 'var(--accent2)');
+    // Schedule next burst: 15-30 taps later (tracked via G.tapsSinceBurst)
+    if(G) G.nextBurstAt = (G.tapsSinceBurst||0) + 35 + Math.floor(Math.random()*25);
+  }, 1800); // shorter burst — feels exciting not punishing
+}
+
+// ── SCREEN SHAKE (miss) ───────────────────────────────────────────
+function screenShake(){
+  const game = document.getElementById('game');
+  game.classList.remove('screen-shake');
+  void game.offsetWidth; // reflow
+  game.classList.add('screen-shake');
+  setTimeout(()=> game.classList.remove('screen-shake'), 400);
+}
+
+// ── SLOW-MO TAP WINDOW (after perfect) ────────────────────────────
+let slowMoActive = false;
+let slowMoTimer  = null;
+const SLOWMO_FACTOR = 0.55; // speed slows to 55% — noticeable but not jarring
+const SLOWMO_DURATION = 800; // ms — longer reward window after perfect
+
+function activateSlowMo(){
+  if(slowMoActive) return;
+  slowMoActive = true;
+
+  const overlay = document.getElementById('slowMoOverlay');
+  if(overlay) overlay.classList.add('show');
+
+  // Store speed, halve it
+  if(G) G._preSlowSpeed = G.speed;
+  if(G) G.speed = Math.max(0.3, G.speed * SLOWMO_FACTOR);
+
+  clearTimeout(slowMoTimer);
+  slowMoTimer = setTimeout(()=>{
+    slowMoActive = false;
+    if(overlay) overlay.classList.remove('show');
+    if(G && G._preSlowSpeed) G.speed = G._preSlowSpeed;
+  }, SLOWMO_DURATION);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SECRET RITUAL — tap FOCUS title 5× within 2 seconds
+// ─────────────────────────────────────────────────────────────────
+let _secretTaps = 0, _secretTimer = null;
+
+function secretTap(){
+  _secretTaps++;
+  clearTimeout(_secretTimer);
+
+  // Flash the title subtly on each tap
+  const t = document.getElementById('focusTitle');
+  t.style.opacity = '0.4';
+  setTimeout(()=> t.style.opacity = '1', 80);
+
+  if(_secretTaps >= 5){
+    _secretTaps = 0;
+    // Small victory flash then open admin
+    doFlash('var(--accent)', 0.15, 300);
+    setTimeout(()=> showScreen('admin'), 120);
+    return;
+  }
+
+  // Tap indicators — brief dot row under title
+  const dots = '· '.repeat(_secretTaps).trim();
+  t.setAttribute('data-dots', dots);
+
+  _secretTimer = setTimeout(()=>{
+    _secretTaps = 0;
+    t.removeAttribute('data-dots');
+  }, 2000);
+}
+
+// ── SERVICE WORKER (PWA offline support) ─────────────────────────
+if('serviceWorker' in navigator){
+  const swCode = `
+    const CACHE = 'focus-v1';
+    const FONT_URL = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap';
+
+    self.addEventListener('install', e => {
+      e.waitUntil(
+        caches.open(CACHE).then(c => c.addAll([FONT_URL]).catch(()=>{}))
+      );
+      self.skipWaiting();
+    });
+
+    self.addEventListener('activate', e => {
+      e.waitUntil(caches.keys().then(keys =>
+        Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      ));
+      self.clients.claim();
+    });
+
+    self.addEventListener('fetch', e => {
+      e.respondWith(
+        caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+          if(e.request.url.includes('fonts')){
+            const clone = res.clone();
+            caches.open(CACHE).then(c => c.put(e.request, clone));
+          }
+          return res;
+        }).catch(() => new Response('', {status: 503})))
+      );
+    });
+  `;
+  const blob = new Blob([swCode], {type:'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl, {scope:'/'})
+    .catch(()=>{}); // silently fail if scope restricted
+}
+
+// ── PWA INSTALL PROMPT ────────────────────────────────────────────
+let _deferredInstall = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredInstall = e;
+  // Show install button on home screen
+  const btn = document.getElementById('installBtn');
+  if(btn) btn.style.display = 'flex';
+});
+window.addEventListener('appinstalled', () => {
+  const btn = document.getElementById('installBtn');
+  if(btn) btn.style.display = 'none';
+  _deferredInstall = null;
+});
+function promptInstall(){
+  if(_deferredInstall){
+    _deferredInstall.prompt();
+    _deferredInstall.userChoice.then(()=>{ _deferredInstall = null; });
+  }
+}
+</script>
+</body>
+</html>
