@@ -1098,7 +1098,7 @@ async function createRoom(target, diff, setter, setterId){
   do { code = String(Math.floor(1000 + Math.random() * 9000)); } while(false);
   const { data, error } = await sb.from('rooms').insert({
     code, target, diff, setter_name: setter, setter_id: setterId,
-    created_at: new Date().toISOString(), entries: []
+    created_at: new Date().toISOString(), entries: [{id: setterId, name: setter, score: 0}]
   }).select().single();
   if(error){ console.warn('createRoom error:', error); return null; }
   return data;
@@ -1125,8 +1125,18 @@ function subscribeToRoom(code, onUpdate){
 
 async function submitRoomScore(code, playerName, score){
   const sb = getSB(); if(!sb) return;
-  // Fetch existing entries, append, update
   const { data } = await sb.from('rooms').select('entries').eq('code', code).single();
+  let entries = data?.entries || [];
+  const existing = entries.findIndex(e => e.id === PLAYER.id);
+  if(existing >= 0){ if(score > entries[existing].score) entries[existing].score = score; }
+  else entries.push({ id: PLAYER.id, name: playerName, score });
+  entries.sort((a,b)=>b.score-a.score);
+  const { data: updated } = await sb.from('rooms').update({ entries }).eq('code', code).select().single();
+  if(updated && chActive && chActive.code === code) {
+    chActive.entries = updated.entries;
+    renderChBoard();
+  }
+} = await sb.from('rooms').select('entries').eq('code', code).single();
   const entries = data?.entries || [];
   const existing = entries.findIndex(e => e.name === playerName);
   if(existing >= 0){ if(score > entries[existing].score) entries[existing].score = score; }
@@ -3297,7 +3307,7 @@ async function createChallenge(){
     while(store[code] && attempts < 20);
     challenge = {
       code, target: chTarget, diff: chDiff, setter: PLAYER.name,
-      setterId: PLAYER.id, created: Date.now(), entries: []
+      setterId: PLAYER.id, created: Date.now(), entries: [{id: setterId, name: setter, score: 0}]
     };
     store[code] = challenge;
     chSave(store);
@@ -3408,7 +3418,7 @@ async function joinChallenge(){
   }
 
   clearChJoinErr();
-  chActive = ch;
+  chActive = ch; subscribeToRoom(ch.code, (updated) => { if(chActive && chActive.code === updated.code) { chActive.entries = updated.entries; renderChBoard(); } });
 
   // Show the joined card
   const setterEntry = (ch.entries||[]).find(e => e.id === ch.setterId);
@@ -3419,7 +3429,7 @@ async function joinChallenge(){
   document.getElementById('ch-joined-from').textContent = ch.setter;
   document.getElementById('ch-joined-meta').innerHTML =
     `FIRST TO HIT <strong style="color:var(--accent)">${ch.target.toLocaleString()}</strong><br>` +
-    `${chDiff.toUpperCase()} · ${setterLine}`;
+    `${ch.diff.toUpperCase()} · ${setterLine}`;
   document.getElementById('ch-joined-card').style.display = 'block';
 
   // Show board
@@ -3437,7 +3447,7 @@ function clearChJoinErr(){
 
 // ── START a challenge run ─────────────────────────────────────────
 function startChallenge(ch){
-  chActive = ch;
+  chActive = ch; subscribeToRoom(ch.code, (updated) => { if(chActive && chActive.code === updated.code) { chActive.entries = updated.entries; renderChBoard(); } });
   prefs.diff = ch.diff;
   startGame();
 }
@@ -3513,7 +3523,7 @@ function recordChallengeResult(score){
 
   store[chActive.code] = ch;
   chSave(store);
-  chActive = ch;
+  chActive = ch; subscribeToRoom(ch.code, (updated) => { if(chActive && chActive.code === updated.code) { chActive.entries = updated.entries; renderChBoard(); } });
 
   // Change 17: also push score to Supabase room
   if(PLAYER.name) submitRoomScore(chActive.code, PLAYER.name, score).catch(()=>{});
