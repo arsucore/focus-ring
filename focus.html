@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FOCUS">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="manifest" href="data:application/json,{
   &quot;name&quot;: &quot;FOCUS&quot;,
   &quot;short_name&quot;: &quot;FOCUS&quot;,
@@ -42,9 +43,8 @@
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
-body{font-family:'IBM Plex Mono',monospace;background-color:#080810;color:var(--text-primary);
+body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--text-primary);
   display:flex;align-items:center;justify-content:center;user-select:none;transition:background .4s,color .4s;}
-body::before { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,0.013) 2px,rgba(255,255,255,0.013) 4px); pointer-events:none; z-index:999; }
 
 #bgCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;}
 
@@ -53,11 +53,13 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
 .screen.active{opacity:1;pointer-events:all;}
 
 /* HOME */
-.title { font-size:clamp(2.4rem,10vw,4rem); font-weight:700; letter-spacing:.45em; margin-bottom:10px; -webkit-text-stroke:2px var(--accent); color:transparent; animation:titleBreath 4s ease-in-out infinite; } @keyframes titleBreath { 0%,100%{filter:drop-shadow(0 0 8px var(--accent));} 50%{filter:drop-shadow(0 0 28px var(--accent)) drop-shadow(0 0 60px var(--accent));} }
+.title{font-size:clamp(2.4rem,10vw,4rem);font-weight:700;letter-spacing:.45em;margin-bottom:10px;}
 .home-lives{display:flex;gap:6px;align-items:center;margin-bottom:40px;min-height:18px;}
 .hdot{width:7px;height:7px;border-radius:50%;background:var(--accent);}
-.hbtn{width:200px;height:50px;border-radius:0;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.5em;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:10px;border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);background:transparent;color:var(--text-mid);position:relative;overflow:hidden;transition:color 80ms,border-color 80ms;} .hbtn::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 18%,transparent),transparent);transition:left 220ms ease;pointer-events:none;} .hbtn:hover::after{left:100%;} .hbtn:hover{border-color:var(--accent);color:var(--accent);}
-.hbtn.p{background-image:linear-gradient(color-mix(in srgb,var(--accent) 20%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--accent) 20%,transparent) 1px,transparent 1px);background-size:8px 8px;background-color:color-mix(in srgb,var(--accent) 8%,transparent);color:var(--accent);border-color:var(--accent);}
+.hbtn{width:200px;height:50px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;
+  letter-spacing:.5em;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-bottom:10px;
+  transition:all .15s;border:none;}
+.hbtn.p{background:var(--accent);color:var(--bg);}
 .hbtn.p:active{filter:brightness(.85);}
 .hbtn.s{background:transparent;border:1px solid var(--text-dim);color:var(--text-mid);}
 .cfg-btn{position:absolute;top:20px;right:20px;background:none;border:none;color:var(--text-mid);cursor:pointer;padding:8px;display:flex;z-index:5;}
@@ -68,7 +70,9 @@ body::before { content:''; position:fixed; inset:0; background:repeating-linear-
 .sback-lbl{font-size:11px;font-weight:700;letter-spacing:.35em;color:var(--text-primary);}
 .ssec{font-size:9px;letter-spacing:.3em;color:var(--text-dim);margin-bottom:12px;margin-top:4px;}
 .sopts{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;}
-.chip{padding:10px 16px;border-radius:0;border:1px solid rgba(255,255,255,0.08);cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.2em;color:var(--text-mid);background:rgba(255,255,255,0.04);transition:all 80ms;display:flex;align-items:center;gap:8px;position:relative;overflow:hidden;} .chip.sel{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);}
+.chip{padding:10px 16px;border-radius:4px;border:1px solid var(--text-dim);cursor:pointer;
+  font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.2em;
+  color:var(--text-mid);background:transparent;transition:all .15s;display:flex;align-items:center;gap:8px;}
 .chip.sel{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);}
 .chip.diff{flex-direction:column;padding:12px 18px;align-items:center;}
 .chip.locked{opacity:.3;cursor:not-allowed;pointer-events:none;}
@@ -109,8 +113,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 .tap-lbl{position:absolute;bottom:-44px;left:50%;transform:translateX(-50%);
   font-size:11px;font-weight:700;letter-spacing:.3em;opacity:0;white-space:nowrap;transition:opacity .08s;z-index:3;}
 .spd-wrap{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);width:min(180px,50vw);z-index:2;pointer-events:none;}
-.spd-segments{display:flex;gap:3px;align-items:flex-end;justify-content:center;} .spd-seg{width:10px;height:14px;border:1px solid var(--text-dim);background:transparent;transition:background 150ms,border-color 150ms;} .spd-seg.lit{background:var(--accent);border-color:var(--accent);} .spd-seg.danger{background:var(--miss);border-color:var(--miss);animation:segPulse 0.5s ease infinite;} @keyframes segPulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
-
+.spd-bar-bg{height:2px;background:var(--text-dim);border-radius:2px;}
+.spd-bar{height:100%;background:var(--accent);border-radius:2px;transition:width .3s,background .3s;width:4%;}
 .spd-lbl{font-size:8px;letter-spacing:.2em;color:var(--text-dim);text-align:center;margin-top:5px;}
 .quit-btn{position:absolute;bottom:18px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.3em;
   color:var(--text-dim);background:transparent;border:none;cursor:pointer;z-index:3;pointer-events:all;}
@@ -247,8 +251,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 .nm-skip{font-size:8px;letter-spacing:.25em;color:var(--text-dim);cursor:pointer;background:none;border:none;
   font-family:'IBM Plex Mono',monospace;padding:8px;text-decoration:underline;text-underline-offset:3px;}
 
-#home::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(var(--accent),transparent 70%);opacity:0.05;filter:blur(60px);pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%);z-index:0;}
-
 /* ADMIN PANEL */
 #admin{align-items:flex-start;padding:44px 24px 60px;justify-content:flex-start;overflow-y:auto;}
 .adm-wrap{width:100%;max-width:480px;}
@@ -289,14 +291,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 .cfg-btn-adm{position:absolute;top:20px;left:20px;background:none;border:none;color:var(--text-mid);
   cursor:pointer;padding:8px;display:flex;z-index:5;font-family:'IBM Plex Mono',monospace;
   font-size:8px;letter-spacing:.2em;}
-
-#rScore{background:linear-gradient(135deg,var(--text-primary) 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-
-@keyframes counterSpin{from{transform-origin:50px 50px;transform:rotate(0deg);}to{transform-origin:50px 50px;transform:rotate(-360deg);}}
-
-@keyframes counterRoll{0%{transform:translateY(10px) scaleY(0.5);opacity:0.2;}60%{transform:translateY(-4px) scaleY(1.06);opacity:1;}100%{transform:translateY(0) scaleY(1);opacity:1;}} .score-num.tick{animation:counterRoll 130ms cubic-bezier(.2,.8,.3,1);}
-
-@keyframes rgbShift{0%{text-shadow:2px 0 0 rgba(255,0,60,0.75),-2px 0 0 rgba(0,200,255,0.75);}25%{text-shadow:-2px 0 0 rgba(255,0,60,0.75),3px 0 0 rgba(0,200,255,0.75);}50%{text-shadow:3px 0 0 rgba(255,0,60,0.75),-1px 0 0 rgba(0,200,255,0.75);}75%{text-shadow:-1px 0 0 rgba(255,0,60,0.75),2px 0 0 rgba(0,200,255,0.75);}100%{text-shadow:1px 0 0 rgba(255,0,60,0.75),-3px 0 0 rgba(0,200,255,0.75);}} .combo-val.glitch{animation:rgbShift 0.12s infinite;}
 
 /* SUPER MODES */
 .super-modes-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px;}
@@ -409,7 +403,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
   color:var(--accent);margin-bottom:6px;
   animation:loadPulse 1.2s ease-in-out infinite;}
 .load-tag{font-size:9px;letter-spacing:.45em;color:var(--text-mid);margin-bottom:48px;}
-.load-bars{display:flex;gap:5px;align-items:flex-end;height:40px;margin-bottom:12px;} .lb{width:4px;background:var(--accent);border-radius:0;transform-origin:bottom;animation:barPulse 0.7s ease-in-out infinite alternate;} .lb:nth-child(1){animation-delay:0s;height:32px;} .lb:nth-child(2){animation-delay:0.11s;height:28px;} .lb:nth-child(3){animation-delay:0.22s;height:38px;} .lb:nth-child(4){animation-delay:0.08s;height:22px;} .lb:nth-child(5){animation-delay:0.33s;height:34px;} .lb:nth-child(6){animation-delay:0.19s;height:26px;} @keyframes barPulse{from{opacity:0.3;transform:scaleY(0.2);}to{opacity:1;transform:scaleY(1);}} @keyframes slideUp{to{transform:translateY(-100%);opacity:0;}} #loadScreen.hide{animation:slideUp 0.4s cubic-bezier(0.8,0,1,1) forwards;}
 .load-bar-wrap{width:min(200px,55vw);height:2px;background:var(--text-dim);border-radius:2px;overflow:hidden;}
 .load-bar{height:100%;width:0%;background:var(--accent);border-radius:2px;transition:width .35s ease;}
 .load-status{font-size:8px;letter-spacing:.3em;color:var(--text-dim);margin-top:12px;}
@@ -426,13 +419,192 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
   opacity:0;
 }
 #milestoneToast.show{transform:translateX(-50%) translateY(0%);opacity:1;}
+
+/* ── CHANGE 2: CRT SCANLINES ──────────────────────────────────── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,.18) 2px,
+    rgba(0,0,0,.18) 4px
+  );
+  pointer-events:none;z-index:999;
+}
+
+/* ── CHANGE 3: HOLLOW GLOWING TITLE ──────────────────────────── */
+.title{
+  -webkit-text-stroke:2px var(--accent);
+  color:transparent;
+  text-shadow:0 0 24px var(--accent),0 0 48px color-mix(in srgb,var(--accent) 40%,transparent);
+  animation:titleBreathe 2.8s ease-in-out infinite;
+}
+@keyframes titleBreathe{
+  0%,100%{text-shadow:0 0 18px var(--accent),0 0 40px color-mix(in srgb,var(--accent) 30%,transparent);}
+  50%{text-shadow:0 0 32px var(--accent),0 0 72px color-mix(in srgb,var(--accent) 55%,transparent),0 0 100px color-mix(in srgb,var(--accent) 20%,transparent);}
+}
+
+/* ── CHANGE 4: SHARP BUTTONS + SCAN-WIPE HOVER ───────────────── */
+.hbtn{
+  border-radius:0 !important;
+  position:relative;overflow:hidden;
+}
+.hbtn::after{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
+  transition:left .4s ease;
+}
+.hbtn:hover::after{ left:100%; }
+.rbtn{ border-radius:0 !important; position:relative; overflow:hidden; }
+.rbtn::after{
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
+  transition:left .4s ease;
+}
+.rbtn:hover::after{ left:100%; }
+
+/* ── CHANGE 5: SHARP CHIPS WITH GLASS BACKGROUND ─────────────── */
+.chip{
+  border-radius:0 !important;
+  background:color-mix(in srgb,var(--accent) 5%,rgba(255,255,255,.03)) !important;
+  backdrop-filter:blur(4px);
+}
+.chip.sel{
+  background:color-mix(in srgb,var(--accent) 14%,rgba(255,255,255,.05)) !important;
+}
+
+/* ── CHANGE 6: EQUALIZER BARS (replace loading bar) ──────────── */
+.load-bar-wrap{ display:none; }
+.load-eq{
+  display:flex;align-items:flex-end;gap:4px;height:32px;margin-bottom:0;
+}
+.eq-bar{
+  width:8px;border-radius:0;background:var(--accent);
+  animation:eqAnim 0.6s ease-in-out infinite;
+  box-shadow:0 0 8px var(--accent);
+}
+.eq-bar:nth-child(1){animation-delay:0s;}
+.eq-bar:nth-child(2){animation-delay:0.1s;}
+.eq-bar:nth-child(3){animation-delay:0.2s;}
+.eq-bar:nth-child(4){animation-delay:0.15s;}
+.eq-bar:nth-child(5){animation-delay:0.05s;}
+.eq-bar:nth-child(6){animation-delay:0.25s;}
+@keyframes eqAnim{
+  0%,100%{height:6px;opacity:.5;}
+  50%{height:32px;opacity:1;}
+}
+
+/* ── CHANGE 7: MECHANICAL SCORE COUNTER ─────────────────────── */
+@keyframes mechTick{
+  0%{transform:translateY(-6px) scaleY(1.06);opacity:.6;}
+  40%{transform:translateY(2px) scaleY(.97);}
+  100%{transform:translateY(0) scaleY(1);opacity:1;}
+}
+.sPop{ animation:mechTick .15s cubic-bezier(.2,.8,.3,1) !important; }
+
+/* ── CHANGE 8: VHS RGB GLITCH ON COMBO ×5+ ──────────────────── */
+@keyframes vhsGlitch{
+  0%,90%,100%{text-shadow:none;}
+  91%{text-shadow:2px 0 #ff0055,-2px 0 #00ffcc;letter-spacing:.08em;}
+  93%{text-shadow:-3px 0 #ff0055,3px 0 #00ffcc;letter-spacing:.04em;}
+  95%{text-shadow:1px 0 #0044ff,-1px 0 #ff4400;letter-spacing:.06em;}
+  97%{text-shadow:none;}
+}
+.combo-val.glitch{ animation:vhsGlitch 1.1s steps(1) infinite; }
+
+/* ── CHANGE 9: SEGMENTED SPEED BAR (6 blocks) ───────────────── */
+.spd-bar-bg{ display:none; }
+.spd-seg-wrap{
+  display:flex;gap:3px;align-items:center;
+  width:min(180px,50vw);
+}
+.spd-seg{
+  flex:1;height:8px;border-radius:0;
+  background:var(--text-dim);
+  transition:background .25s,box-shadow .25s;
+}
+.spd-seg.active{ background:var(--accent); }
+.spd-seg.danger-seg{ background:var(--miss);box-shadow:0 0 6px var(--miss); }
+
+/* ── CHANGE 10: COUNTER-ROTATING DASHED OUTER RING ──────────── */
+@keyframes ctrRotate{ from{transform:rotate(0deg)}to{transform:rotate(-360deg)} }
+#outerDashRing{
+  transform-origin:50px 50px;
+  animation:ctrRotate 12s linear infinite;
+}
+
+/* ── CHANGE 11: PHOSPHOR GLOW LAG ARC ───────────────────────── */
+#phosphorArc{
+  fill:none;
+  stroke:var(--accent);
+  stroke-width:13;
+  stroke-linecap:round;
+  opacity:.22;
+  filter:blur(3px);
+  cx:50;cy:50;r:38;
+  transform:rotate(-90deg);
+  transform-origin:50px 50px;
+  stroke-dasharray:0 239;
+  stroke-dashoffset:0;
+  transition:stroke-dasharray .55s cubic-bezier(.2,.8,.3,1);
+}
+
+/* ── CHANGE 12: RESULT SCORE GRADIENT TEXT ───────────────────── */
+.rs{
+  background:linear-gradient(135deg,var(--text-primary) 30%,var(--accent) 70%,var(--accent2));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+/* ── CHANGE 13: HOME SCREEN GLOW ORB ─────────────────────────── */
+#homeGlowOrb{
+  position:absolute;
+  width:min(320px,85vw);height:min(320px,85vw);
+  border-radius:50%;
+  background:radial-gradient(ellipse at center,
+    color-mix(in srgb,var(--accent) 18%,transparent) 0%,
+    transparent 70%
+  );
+  pointer-events:none;z-index:0;
+  animation:orbPulse 3s ease-in-out infinite;
+}
+@keyframes orbPulse{
+  0%,100%{opacity:.7;transform:scale(.95);}
+  50%{opacity:1;transform:scale(1.05);}
+}
+#home .title{ position:relative;z-index:1; }
+#home .home-lives,#home .hbtn,#home #homeGreeting,#home #homeStreak,
+#home #streakDots,#home #homeBestScore,#home .cfg-btn,#home #installBtn{
+  position:relative;z-index:1;
+}
+
+/* ── GLOBAL LEADERBOARD SCREEN ───────────────────────────────── */
+#globalBoard{align-items:flex-start;padding:44px 32px 60px;justify-content:flex-start;overflow-y:auto;}
+.gb-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--text-dim);}
+.gb-rank{font-size:10px;font-weight:700;color:var(--text-dim);width:24px;flex-shrink:0;}
+.gb-rank.gold{color:#ffd700;}
+.gb-rank.silver{color:#c0c0c0;}
+.gb-rank.bronze{color:#cd7f32;}
+.gb-name{flex:1;font-size:10px;font-weight:700;letter-spacing:.08em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gb-score{font-size:10px;font-weight:700;color:var(--accent);}
+.gb-diff{font-size:7px;letter-spacing:.18em;padding:2px 6px;border:1px solid var(--text-dim);color:var(--text-mid);}
+.gb-empty{font-size:10px;letter-spacing:.2em;color:var(--text-dim);padding:20px 0;text-align:center;}
+.gb-you{ background:color-mix(in srgb,var(--accent) 8%,transparent); }
+.gb-you .gb-name{ color:var(--accent); }
 </style>
 <body>
 <!-- LOADING SCREEN -->
 <div id="loadScreen">
   <div class="load-logo">FOCUS</div>
   <div class="load-tag">TAP. REACT. SURVIVE.</div>
-  <div class="load-bars" id="loadBars"><div class="lb"></div><div class="lb"></div><div class="lb"></div><div class="lb"></div><div class="lb"></div><div class="lb"></div></div>
+  <div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
+  <div class="load-eq" id="loadEq">
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+    <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+  </div>
   <div class="load-status" id="loadStatus">LOADING...</div>
 </div>
 <canvas id="bgCanvas"></canvas>
@@ -539,6 +711,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 
 <!-- HOME -->
 <div class="screen active" id="home">
+  <div id="homeGlowOrb"></div>
   <button class="cfg-btn" onclick="showScreen('settings')">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="12" cy="12" r="3"/>
@@ -560,9 +733,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
   <button class="hbtn p" onclick="startGame()">PLAY</button>
   <button class="hbtn s hbtn-challenge" onclick="showScreen('challenge')">🎯 CHALLENGE</button>
   <button class="hbtn s" onclick="showScreen('settings')">SETTINGS</button>
-  <button class="hbtn s" onclick="showGlobalLeaderboard()">GLOBAL BOARD</button>
   <button class="hbtn s" onclick="showScreen('stats')">STATS</button>
   <button class="hbtn s" onclick="showScreen('unlocks')">UNLOCKS</button>
+  <button class="hbtn s" onclick="showGlobalBoard()" style="border-color:var(--accent2);color:var(--accent2)">🌐 GLOBAL BOARD</button>
   <!-- Admin accessible only via secret ritual: tap FOCUS title 5× -->
   <button id="installBtn" class="hbtn s" onclick="promptInstall()" style="display:none;margin-top:4px;border-color:var(--accent);color:var(--accent)">⬇ INSTALL APP</button>
 </div>
@@ -713,7 +886,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 </div>
 
 <!-- UNLOCKS -->
-<div class="screen scroll-screen" id="globalBoard"><div style="width:100%;max-width:400px"><div class="sback" onclick="showScreen('home')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg><span class="sback-lbl">GLOBAL BOARD</span></div><div style="font-size:9px;letter-spacing:.2em;color:var(--text-mid);margin-bottom:20px">TOP SCORES WORLDWIDE</div><div id="globalBoardRows"></div></div></div>
 <div class="screen scroll-screen" id="unlocks">
   <div style="width:100%;max-width:400px">
     <div class="sback" onclick="showScreen('home')">
@@ -724,6 +896,34 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
       Earn achievements to unlock new themes, backgrounds, and modes.
     </div>
     <div class="unlock-grid" id="unlockGrid"></div>
+  </div>
+</div>
+
+<!-- GLOBAL LEADERBOARD -->
+<div class="screen scroll-screen" id="globalBoard">
+  <div style="width:100%;max-width:400px">
+    <div class="sback" onclick="showScreen('home')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      <span class="sback-lbl">GLOBAL BOARD</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:9px;letter-spacing:.2em;color:var(--text-mid)">TOP PLAYERS WORLDWIDE</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="gbDiffFilter" onchange="fetchGlobalLeaderboard()" style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.15em;background:transparent;border:1px solid var(--text-dim);color:var(--text-mid);padding:4px 8px;cursor:pointer;border-radius:0">
+          <option value="all">ALL DIFFS</option>
+          <option value="easy">EASY</option>
+          <option value="normal">NORMAL</option>
+          <option value="hard">HARD</option>
+          <option value="zen">ZEN</option>
+        </select>
+        <button onclick="fetchGlobalLeaderboard()" style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.2em;color:var(--text-mid);background:transparent;border:1px solid var(--text-dim);padding:4px 10px;cursor:pointer;">↻</button>
+      </div>
+    </div>
+    <div id="gbRows"><div class="gb-empty">LOADING...</div></div>
+    <div id="gbYouRow" style="margin-top:16px;display:none">
+      <div style="font-size:8px;letter-spacing:.3em;color:var(--text-dim);margin-bottom:8px;padding-top:12px;border-top:1px solid var(--text-dim)">YOUR BEST</div>
+      <div id="gbYouCard"></div>
+    </div>
   </div>
 </div>
 
@@ -742,7 +942,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
   <div class="ring-area" id="ringArea">
     <div id="slowMoOverlay"></div>
     <svg class="ring-svg" id="ringSvg" viewBox="0 0 100 100">
-      <circle id="outerTrack" fill="none" stroke="var(--ring-track)" stroke-width="1" cx="50" cy="50" r="45" opacity="0.35" stroke-dasharray="2 8" style="animation:counterSpin 24s linear infinite"/>
       <defs>
         <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="2" result="b"/>
@@ -754,7 +953,13 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
         </filter>
       </defs>
       <circle id="trackCircle" fill="none" stroke="var(--ring-track)" stroke-width="13" cx="50" cy="50" r="38"/>
-      <circle id="sweepGlow" fill="none" stroke="var(--accent)" stroke-width="18" stroke-linecap="round" cx="50" cy="50" r="38" transform="rotate(-90 50 50)" stroke-dasharray="0 239" opacity="0.10" filter="url(#glow)"/>
+      <!-- Change 11: Phosphor glow lag arc (behind sweep) -->
+      <circle id="phosphorArc" fill="none" stroke="var(--accent)" stroke-width="13" stroke-linecap="round"
+        cx="50" cy="50" r="38" transform="rotate(-90 50 50)" stroke-dasharray="0 239" stroke-dashoffset="0"
+        opacity=".22" style="filter:blur(3px);transition:stroke-dasharray .55s cubic-bezier(.2,.8,.3,1)"/>
+      <!-- Change 10: Counter-rotating dashed outer ring -->
+      <circle id="outerDashRing" fill="none" stroke="var(--accent)" stroke-width="1" cx="50" cy="50" r="46"
+        stroke-dasharray="4 8" opacity=".28" style="transform-origin:50px 50px;animation:ctrRotate 12s linear infinite"/>
       <circle id="sweepArc" fill="none" stroke="var(--accent2)" stroke-width="13" stroke-linecap="round"
         cx="50" cy="50" r="38" transform="rotate(-90 50 50)" stroke-dasharray="0 239" stroke-dashoffset="0"/>
       <g id="targetGroup" filter="url(#glow)">
@@ -783,7 +988,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
     <div class="combo-val" id="comboVal"></div>
     <div class="combo-sub" id="comboPre" style="visibility:hidden">COMBO</div>
   </div>
-  <div class="spd-wrap"><div class="spd-segments" id="spdSegs"><div class="spd-seg"></div><div class="spd-seg"></div><div class="spd-seg"></div><div class="spd-seg"></div><div class="spd-seg"></div><div class="spd-seg"></div></div><div class="spd-lbl" id="spdLbl">x1.0</div></div></div>
+  <div class="spd-wrap">
+    <div class="spd-bar-bg"><div class="spd-bar" id="spdBar"></div></div>
+    <div class="spd-seg-wrap" id="spdSegWrap">
+      <div class="spd-seg" id="seg0"></div>
+      <div class="spd-seg" id="seg1"></div>
+      <div class="spd-seg" id="seg2"></div>
+      <div class="spd-seg" id="seg3"></div>
+      <div class="spd-seg" id="seg4"></div>
+      <div class="spd-seg" id="seg5"></div>
+    </div>
     <div class="spd-lbl" id="spdLbl">×1.0</div>
   </div>
   <div class="ch-progress-wrap" id="chProgressWrap" style="display:none">
@@ -828,6 +1042,188 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 <div id="cd"></div>
 
 <script>
+// ─────────────────────────────────────────────────────────────────
+// window.storage POLYFILL
+// The real window.storage API only exists inside Claude's artifact sandbox.
+// On GitHub Pages it's undefined — this shim backs it with localStorage so
+// the init promise chain (loadAllTime → loadStreak → loadPlayer) always resolves.
+// ─────────────────────────────────────────────────────────────────
+if(!window.storage || typeof window.storage.get !== 'function'){
+  window.storage = {
+    get: async function(key){
+      try{
+        const val = localStorage.getItem('focus_storage_' + key);
+        return val !== null ? { key, value: val } : null;
+      } catch(e){ return null; }
+    },
+    set: async function(key, value){
+      try{
+        localStorage.setItem('focus_storage_' + key, value);
+        return { key, value };
+      } catch(e){ return null; }
+    },
+    delete: async function(key){
+      try{
+        localStorage.removeItem('focus_storage_' + key);
+        return { key, deleted: true };
+      } catch(e){ return null; }
+    },
+    list: async function(prefix){
+      try{
+        const keys = Object.keys(localStorage)
+          .filter(k => k.startsWith('focus_storage_' + (prefix||'')))
+          .map(k => k.replace('focus_storage_',''));
+        return { keys };
+      } catch(e){ return { keys:[] }; }
+    }
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SUPABASE — Change 15: init + room/leaderboard functions
+// ─────────────────────────────────────────────────────────────────
+const SUPABASE_URL  = 'https://rqyffdowkxljaoouvfhb.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxeWZmZG93a3hsamFvb3V2ZmhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzIyMTEsImV4cCI6MjA5NjMwODIxMX0.e-QGXrhRNys8i7CeOjQGTFCxix1YQNWGKFncTkGqmuo';
+let _sb = null;
+function getSB(){
+  if(_sb) return _sb;
+  try{ _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON); }catch(e){}
+  return _sb;
+}
+
+// ── Room functions (Change 17 replacement for createChallenge/joinChallenge) ─
+async function createRoom(target, diff, setter, setterId){
+  const sb = getSB(); if(!sb) return null;
+  let code;
+  do { code = String(Math.floor(1000 + Math.random() * 9000)); } while(false);
+  const { data, error } = await sb.from('rooms').insert({
+    code, target, diff, setter_name: setter, setter_id: setterId,
+    created_at: new Date().toISOString(), entries: []
+  }).select().single();
+  if(error){ console.warn('createRoom error:', error); return null; }
+  return data;
+}
+
+async function joinRoom(code){
+  const sb = getSB(); if(!sb) return null;
+  const { data, error } = await sb.from('rooms')
+    .select('*').eq('code', code).single();
+  if(error || !data) return null;
+  // Check expiry (24h)
+  if(Date.now() - new Date(data.created_at).getTime() > 86400000) return null;
+  return data;
+}
+
+function subscribeToRoom(code, onUpdate){
+  const sb = getSB(); if(!sb) return null;
+  return sb.channel('room:' + code)
+    .on('postgres_changes', {
+      event:'UPDATE', schema:'public', table:'rooms', filter:'code=eq.'+code
+    }, payload => onUpdate(payload.new))
+    .subscribe();
+}
+
+async function submitRoomScore(code, playerName, score){
+  const sb = getSB(); if(!sb) return;
+  // Fetch existing entries, append, update
+  const { data } = await sb.from('rooms').select('entries').eq('code', code).single();
+  const entries = data?.entries || [];
+  const existing = entries.findIndex(e => e.name === playerName);
+  if(existing >= 0){ if(score > entries[existing].score) entries[existing].score = score; }
+  else entries.push({ name: playerName, score });
+  entries.sort((a,b)=>b.score-a.score);
+  await sb.from('rooms').update({ entries }).eq('code', code);
+}
+
+// ── Global leaderboard functions ──────────────────────────────────
+async function submitRunToLeaderboard(run){
+  const sb = getSB(); if(!sb) return;
+  if(!PLAYER || !PLAYER.name || PLAYER.name === 'Player') return;
+  try {
+    // Upsert: keep the best score per player per difficulty
+    const { data: existing } = await sb.from('leaderboard')
+      .select('id, score')
+      .eq('player_id', PLAYER.id)
+      .eq('diff', run.diff)
+      .single();
+    if(existing){
+      if(run.score > existing.score){
+        await sb.from('leaderboard').update({
+          score: run.score, acc: run.acc, combo: run.combo,
+          speed: run.speed, perfects: run.perfects, goods: run.goods,
+          played_at: new Date().toISOString(), player_name: PLAYER.name
+        }).eq('id', existing.id);
+      }
+    } else {
+      await sb.from('leaderboard').insert({
+        player_id: PLAYER.id, player_name: PLAYER.name,
+        score: run.score, acc: run.acc, combo: run.combo,
+        speed: run.speed, diff: run.diff,
+        perfects: run.perfects, goods: run.goods,
+        played_at: new Date().toISOString()
+      });
+    }
+  } catch(e){ console.warn('leaderboard submit error:', e); }
+}
+
+async function fetchGlobalLeaderboard(){
+  const sb = getSB();
+  const el = document.getElementById('gbRows');
+  if(!el) return;
+  el.innerHTML = '<div class="gb-empty">LOADING...</div>';
+
+  if(!sb){
+    el.innerHTML = '<div class="gb-empty">COULD NOT CONNECT</div>';
+    return;
+  }
+
+  try {
+    const diff = document.getElementById('gbDiffFilter')?.value || 'all';
+    let query = sb.from('leaderboard').select('*').order('score', {ascending:false}).limit(100);
+    if(diff !== 'all') query = query.eq('diff', diff);
+    const { data, error } = await query;
+    if(error || !data){ el.innerHTML = '<div class="gb-empty">ERROR LOADING</div>'; return; }
+    if(!data.length){ el.innerHTML = '<div class="gb-empty">NO ENTRIES YET — BE FIRST!</div>'; return; }
+
+    const medals = ['gold','silver','bronze'];
+    el.innerHTML = data.map((row, i) => {
+      const isYou = PLAYER && row.player_id === PLAYER.id;
+      const rankCls = medals[i] || '';
+      return `<div class="gb-row${isYou?' gb-you':''}">
+        <div class="gb-rank ${rankCls}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+        <div class="gb-name">${row.player_name || 'UNKNOWN'}${isYou?' ◀':''}</div>
+        <div class="gb-score">${row.score.toLocaleString()}</div>
+        <div class="gb-diff">${(row.diff||'').toUpperCase()}</div>
+      </div>`;
+    }).join('');
+
+    // Show "your best" card if not in top list
+    const youEl = document.getElementById('gbYouRow');
+    const youCard = document.getElementById('gbYouCard');
+    if(PLAYER && youEl && youCard){
+      const myEntry = data.find(r => r.player_id === PLAYER.id);
+      const myRank  = myEntry ? data.indexOf(myEntry) + 1 : null;
+      if(myEntry && myRank > 10){
+        youEl.style.display = 'block';
+        youCard.innerHTML = `<div class="gb-row gb-you">
+          <div class="gb-rank">#${myRank}</div>
+          <div class="gb-name">${myEntry.player_name}</div>
+          <div class="gb-score">${myEntry.score.toLocaleString()}</div>
+          <div class="gb-diff">${(myEntry.diff||'').toUpperCase()}</div>
+        </div>`;
+      } else { youEl.style.display = 'none'; }
+    }
+  } catch(e){
+    el.innerHTML = '<div class="gb-empty">ERROR LOADING</div>';
+  }
+}
+
+// ── showGlobalBoard helper ────────────────────────────────────────
+function showGlobalBoard(){
+  showScreen('globalBoard');
+  fetchGlobalLeaderboard();
+}
+
 // ─────────────────────────────────────────────────────────────────
 // AUDIO
 // ─────────────────────────────────────────────────────────────────
@@ -1816,7 +2212,10 @@ function diamondPoints(cx, cy, tangentAngle, half, spike){
 
 function draw(dt){
   const on=G.sweep*CIRC;
-  document.getElementById('sweepArc').setAttribute('stroke-dasharray',`${on} ${CIRC-on}`); const lagOn=Math.max(0,G.sweep-0.014)*239; document.getElementById('sweepGlow').setAttribute('stroke-dasharray',lagOn+' '+(239-lagOn));
+  document.getElementById('sweepArc').setAttribute('stroke-dasharray',`${on} ${CIRC-on}`);
+  // Change 11: phosphor lag arc trails behind with CSS transition
+  const phosphor = document.getElementById('phosphorArc');
+  if(phosphor) phosphor.setAttribute('stroke-dasharray',`${on} ${CIRC-on}`);
   const tipAng=G.sweep*2*Math.PI-Math.PI/2;
   const tipCx = CX+R*Math.cos(tipAng);
   const tipCy = CY+R*Math.sin(tipAng);
@@ -2022,7 +2421,8 @@ function showResult(){
               perfects:savedG.perfects, goods:savedG.goods, misses:savedG.misses, diff:prefs.diff,
               trapPerfects:savedG.trapPerfects||0, maxComboResets:savedG.maxComboResets||0 };
 
-  const isNewBest=recordRun(run); submitRunToLeaderboard(run);
+  const isNewBest=recordRun(run);
+  submitRunToLeaderboard(run); // Change 16: submit to global leaderboard
   recordPlayToday(); // update daily streak
   const newAchievements=checkAchievements(run);
   if(newAchievements.length) playUnlock();
@@ -2054,7 +2454,7 @@ function showResult(){
   if(chActive) renderChBoard();
   showScreen('result');
   // Record challenge result then refresh board
-  if(chActive){ recordChallengeResult(savedG.score); if(chActive&&chActive.code)submitRoomScore(chActive.code,savedG.score,true); renderChBoard(); }
+  if(chActive){ recordChallengeResult(savedG.score); renderChBoard(); }
   chWinPending = false;
 }
 
@@ -2136,15 +2536,17 @@ function showMilestoneToast(label){
 function setScore(v){
   const el=document.getElementById('scoreNum');
   el.textContent=v.toLocaleString();
-  el.classList.remove('sPop'); void el.offsetWidth; el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick');;
+  el.classList.remove('sPop'); void el.offsetWidth; el.classList.add('sPop');
   checkMilestone(v);
   if(chActive) { updateChProgress(v); checkChallengeWin(v); }
 }
 function setComboDisplay(c){
   const val=document.getElementById('comboVal'), pre=document.getElementById('comboPre');
-  if(c>=2){ val.textContent=`×${c}`; if(c>=5){val.classList.add('glitch');}else{val.classList.remove('glitch');} val.classList.add('lit'); pre.style.visibility='visible';
+  if(c>=2){ val.textContent=`×${c}`; val.classList.add('lit'); pre.style.visibility='visible';
     val.classList.remove('cPop'); void val.offsetWidth; val.classList.add('cPop');
   } else { val.textContent=''; val.classList.remove('lit'); pre.style.visibility='hidden'; }
+  // Change 8: VHS RGB glitch at ×5+
+  val.classList.toggle('glitch', c >= 5);
 }
 function setLivesNum(lives){ 
   const isZen    = prefs.diff === 'zen';
@@ -2152,8 +2554,22 @@ function setLivesNum(lives){
   document.getElementById('livesNum').textContent = isZen ? '∞' : isSudden ? '☠' : lives;
   document.getElementById('livesNum').className='lives-num'+(((!isZen&&!isSudden) && lives===1)?' danger':''); }
 function updateSpdBar(){
-  const segs=document.querySelectorAll('.spd-seg'); const pct=(G.speed-1)/(MAX_SPEED-1); const lit=Math.round(pct*6); segs.forEach((s,i)=>{s.classList.toggle('lit',i<lit);s.classList.toggle('danger',i<lit&&pct>0.75);}); document.getElementById('spdLbl').textContent='x'+G.speed.toFixed(1);
-}`;
+  const pct=Math.min(100,((G.speed-1)/(MAX_SPEED-1))*100);
+  document.getElementById('spdBar').style.width=Math.max(3,pct)+'%';
+  document.getElementById('spdBar').style.background=pct>75?'var(--miss)':pct>50?'color-mix(in srgb,var(--miss) 40%,var(--accent))':'var(--accent)';
+  document.getElementById('spdLbl').textContent=`×${G.speed.toFixed(1)}`;
+  // Change 9: update segmented bar
+  const segs = 6;
+  const activeFill = Math.round((pct / 100) * segs);
+  const isDanger = pct > 75;
+  for(let i=0;i<segs;i++){
+    const seg = document.getElementById('seg'+i);
+    if(!seg) continue;
+    const on = i < activeFill;
+    seg.classList.toggle('active', on && !isDanger);
+    seg.classList.toggle('danger-seg', on && isDanger);
+    if(!on){ seg.classList.remove('active','danger-seg'); }
+  }
 }
 function showTapLbl(text,color){
   const el=document.getElementById('tapLbl');
@@ -2860,60 +3276,55 @@ function onChTargetSlider(el){
   document.querySelectorAll('#ch-target-opts .chip').forEach(c => c.classList.remove('sel'));
 }
 
-// ── CREATE ────────────────────────────────────────────────────────
+// ── CREATE (Change 17: uses Supabase rooms table with localStorage fallback) ──
 async function createChallenge(){
-  if(!PLAYER.name){showNameModal();return;}
-  const code=await createRoom(chTarget,chDiff);
-  if(!code){alert('Failed to create room. Check Supabase connection.');return;}
-  chActive={code,target:chTarget,diff:chDiff,setter:PLAYER.name,setterId:PLAYER.id,entries:[]};
-  document.getElementById('ch-code-box').style.display='block';
-  document.getElementById('ch-create-btn').style.display='none';
-  document.getElementById('ch-code-display').textContent=code;
-  document.getElementById('ch-code-meta').textContent='TARGET '+chTarget.toLocaleString()+' · '+chDiff.toUpperCase()+' · Share this code';
-  document.getElementById('ch-board-panel').style.display='block';
-  document.getElementById('ch-board-rows').innerHTML='<div class="adm-empty">NO ENTRIES YET</div>';
-  subscribeToRoom(code,(room)=>{
-    chActive.host_score=room.host_score;
-    chActive.guest_score=room.guest_score;
-    chActive.guest_name=room.guest_name;
-    renderChBoard();
-  });
-}
+  if(!PLAYER.name){ showNameModal(); return; }
 
-  // Generate unique 4-digit code
-  const store = chLoad();
-  let code;
-  let attempts = 0;
-  do {
-    code = String(Math.floor(1000 + Math.random() * 9000));
-    attempts++;
-  } while(store[code] && attempts < 20);
+  const btn = document.getElementById('ch-create-btn');
+  if(btn){ btn.textContent = 'CREATING...'; btn.disabled = true; }
 
-  const challenge = {
-    code,
-    target:   chTarget,
-    diff:     chDiff,
-    setter:   PLAYER.name,
-    setterId: PLAYER.id,
-    created:  Date.now(),
-    entries:  []
-  };
+  // Try Supabase first
+  let challenge = null;
+  try {
+    challenge = await createRoom(chTarget, chDiff, PLAYER.name, PLAYER.id);
+  } catch(e){}
 
-  store[code] = challenge;
-  chSave(store);
+  if(!challenge){
+    // Fallback: local storage (original behavior)
+    const store = chLoad();
+    let code; let attempts = 0;
+    do { code = String(Math.floor(1000 + Math.random() * 9000)); attempts++; }
+    while(store[code] && attempts < 20);
+    challenge = {
+      code, target: chTarget, diff: chDiff, setter: PLAYER.name,
+      setterId: PLAYER.id, created: Date.now(), entries: []
+    };
+    store[code] = challenge;
+    chSave(store);
+  } else {
+    // Normalize Supabase response to local schema
+    challenge = {
+      code: challenge.code, target: challenge.target, diff: challenge.diff,
+      setter: challenge.setter_name, setterId: challenge.setter_id,
+      created: new Date(challenge.created_at).getTime(), entries: challenge.entries || []
+    };
+    // Also save locally so board renders
+    const store = chLoad();
+    store[challenge.code] = challenge;
+    chSave(store);
+  }
+
   chActive = challenge;
+  if(btn){ btn.textContent = '🎯 CREATE CHALLENGE'; btn.disabled = false; }
 
-  // Show code box
   document.getElementById('ch-code-box').style.display = 'block';
   document.getElementById('ch-create-btn').style.display = 'none';
-  document.getElementById('ch-code-display').textContent = code;
+  document.getElementById('ch-code-display').textContent = challenge.code;
   document.getElementById('ch-code-meta').textContent =
     `TARGET ${chTarget.toLocaleString()} · ${chDiff.toUpperCase()} · Tell your friend this code`;
 
-  // Show results board area
   document.getElementById('ch-board-panel').style.display = 'block';
-  document.getElementById('ch-board-rows').innerHTML =
-    '<div class="adm-empty">NO ENTRIES YET</div>';
+  document.getElementById('ch-board-rows').innerHTML = '<div class="adm-empty">NO ENTRIES YET</div>';
 }
 
 function chCopyCode(){
@@ -2949,37 +3360,48 @@ function chDigitKey(e, idx){
   if(e.key === 'Enter') joinChallenge();
 }
 
+// ── JOIN (Change 17: checks Supabase rooms then falls back to local) ──
 async function joinChallenge(){
-  const code=[0,1,2,3].map(i=>document.getElementById('chd'+i).value).join('');
-  if(code.length<4){showChJoinErr('ENTER ALL 4 DIGITS');return;}
-  const room=await joinRoom(code);
-  if(!room){showChJoinErr('CODE NOT FOUND — CHECK AND TRY AGAIN');document.getElementById('ch-code-inputs').classList.remove('shake');void document.getElementById('ch-code-inputs').offsetWidth;document.getElementById('ch-code-inputs').classList.add('shake');return;}
-  clearChJoinErr();
-  chActive={code,target:room.target,diff:room.diff,setter:room.host_name,setterId:room.host_id,entries:[]};
-  document.getElementById('ch-joined-from').textContent=room.host_name;
-  document.getElementById('ch-joined-meta').innerHTML='FIRST TO HIT <strong style="color:var(--accent)">'+room.target.toLocaleString()+'</strong><br>'+room.diff.toUpperCase();
-  document.getElementById('ch-joined-card').style.display='block';
-  document.getElementById('ch-board-panel').style.display='block';
-  subscribeToRoom(code,(updated)=>{
-    chActive.host_score=updated.host_score;
-    chActive.guest_score=updated.guest_score;
-    renderChBoard();
-  });
-}
+  const code = [0,1,2,3].map(i => document.getElementById('chd'+i).value).join('');
+  if(code.length < 4){ showChJoinErr('ENTER ALL 4 DIGITS'); return; }
 
-  const store = chLoad();
-  const ch = store[code];
+  const joinBtn = document.querySelector('#ch-panel-join .hbtn.p');
+  if(joinBtn){ joinBtn.textContent = 'LOOKING UP...'; joinBtn.disabled = true; }
+
+  let ch = null;
+
+  // 1. Try Supabase
+  try {
+    const sbRoom = await joinRoom(code);
+    if(sbRoom){
+      ch = {
+        code: sbRoom.code, target: sbRoom.target, diff: sbRoom.diff,
+        setter: sbRoom.setter_name, setterId: sbRoom.setter_id,
+        created: new Date(sbRoom.created_at).getTime(), entries: sbRoom.entries || []
+      };
+      // Cache locally
+      const store = chLoad();
+      store[code] = ch;
+      chSave(store);
+    }
+  } catch(e){}
+
+  // 2. Fallback to local storage
+  if(!ch){
+    const store = chLoad();
+    ch = store[code] || null;
+  }
+
+  if(joinBtn){ joinBtn.textContent = 'JOIN & PLAY'; joinBtn.disabled = false; }
 
   if(!ch){
     showChJoinErr('CODE NOT FOUND — CHECK AND TRY AGAIN');
-    // Shake the inputs
     document.getElementById('ch-code-inputs').classList.remove('shake');
     void document.getElementById('ch-code-inputs').offsetWidth;
     document.getElementById('ch-code-inputs').classList.add('shake');
     return;
   }
 
-  // Check if expired (24 hours)
   if(Date.now() - ch.created > 86400000){
     showChJoinErr('THIS CHALLENGE HAS EXPIRED');
     return;
@@ -3092,6 +3514,9 @@ function recordChallengeResult(score){
   store[chActive.code] = ch;
   chSave(store);
   chActive = ch;
+
+  // Change 17: also push score to Supabase room
+  if(PLAYER.name) submitRoomScore(chActive.code, PLAYER.name, score).catch(()=>{});
 }
 
 // ── Render leaderboard ────────────────────────────────────────────
@@ -3483,7 +3908,7 @@ function secretTap(){
 if('serviceWorker' in navigator){
   const swCode = `
     const CACHE = 'focus-v1';
-    const FONT_URL = 'https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap';
+    const FONT_URL = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap';
 
     self.addEventListener('install', e => {
       e.waitUntil(
@@ -3537,69 +3962,6 @@ function promptInstall(){
     _deferredInstall.userChoice.then(()=>{ _deferredInstall = null; });
   }
 }
-
-const SUPABASE_URL='https://rqyffdowkxljaoouvfhb.supabase.co';
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJxeWZmZG93a3hsamFvb3V2ZmhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MzIyMTEsImV4cCI6MjA5NjMwODIxMX0.e-QGXrhRNys8i7CeOjQGTFCxix1YQNWGKFncTkGqmuo';
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-let roomSub=null;
-
-async function createRoom(target,diff){
-  let code,attempts=0;
-  do{code=String(Math.floor(1000+Math.random()*9000));attempts++;}
-  while(attempts<10);
-  const{error}=await sb.from('rooms').insert({code,host_id:PLAYER.id,host_name:PLAYER.name,target,diff,status:'waiting'});
-  if(error){console.error('createRoom error',error);return null;}
-  return code;
-}
-
-async function joinRoom(code){
-  const{data:room,error}=await sb.from('rooms').select('*').eq('code',code).single();
-  if(error||!room){return null;}
-  if(room.host_id!==PLAYER.id){
-    await sb.from('rooms').update({guest_id:PLAYER.id,guest_name:PLAYER.name,status:'active'}).eq('code',code);
-  }
-  const{data:updated}=await sb.from('rooms').select('*').eq('code',code).single();
-  return updated;
-}
-
-function subscribeToRoom(code,onUpdate){
-  if(roomSub)sb.removeChannel(roomSub);
-  roomSub=sb.channel('room:'+code).on('postgres_changes',{event:'UPDATE',schema:'public',table:'rooms',filter:'code=eq.'+code},payload=>onUpdate(payload.new)).subscribe();
-}
-
-function unsubscribeRoom(){
-  if(roomSub){sb.removeChannel(roomSub);roomSub=null;}
-}
-
-async function submitRoomScore(code,score,done=true){
-  const{data:room}=await sb.from('rooms').select('*').eq('code',code).single();
-  if(!room)return;
-  const isHost=room.host_id===PLAYER.id;
-  const update=isHost?{host_score:score,host_done:done}:{guest_score:score,guest_done:done};
-  const otherDone=isHost?room.guest_done:room.host_done;
-  if(otherDone&&done)update.status='done';
-  await sb.from('rooms').update(update).eq('code',code);
-}
-
-async function submitRunToLeaderboard(run){
-  if(!PLAYER.id||!PLAYER.name||PLAYER.name==='Player')return;
-  await sb.from('leaderboard').insert({player_id:PLAYER.id,player_name:PLAYER.name,score:run.score,combo:run.combo,accuracy:run.acc,diff:run.diff});
-}
-
-async function fetchGlobalLeaderboard(limit=20){
-  const{data}=await sb.from('leaderboard').select('player_name,score,combo,accuracy,diff,created_at').order('score',{ascending:false}).limit(limit);
-  return data||[];
-}
-
-async function showGlobalLeaderboard(){
-  showScreen('globalBoard');
-  const el=document.getElementById('globalBoardRows');
-  el.innerHTML='<div style="font-size:10px;letter-spacing:.2em;color:var(--text-dim);padding:20px 0">LOADING...</div>';
-  const rows=await fetchGlobalLeaderboard(20);
-  if(!rows.length){el.innerHTML='<div style="font-size:10px;letter-spacing:.2em;color:var(--text-dim);padding:20px 0">NO SCORES YET</div>';return;}
-  el.innerHTML=rows.map((r,i)=>`<div class="stat-run${i===0?' is-best':''}"><div><span class="stat-run-score">${r.score.toLocaleString()}</span><span style="font-size:8px;letter-spacing:.15em;color:var(--text-mid);margin-left:10px">${r.player_name}</span></div><div class="stat-run-meta">${r.diff.toUpperCase()} · ${r.accuracy}% · x${r.combo}</div></div>`).join('');
-}
-
 </script>
 </body>
 </html>
